@@ -1,0 +1,28 @@
+<!-- views/teacher-dashboard.ejs -->
+<%- include('partials/header', { title: 'Teacher Dashboard', user: user }) %>
+
+<div class="flex flex-col md:flex-row">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-1/4 bg-blue-500 text-white p-4 rounded shadow mb-4 md:mb-0">
+        <h3 class="text-xl font-semibold mb-4">Dashboard</h3>
+        <ul>
+            <li class="mb-2">
+                <a href="/teacher/dashboard" class="block py-2 px-3 rounded hover:bg-blue-600">Home</a>
+            </li>
+            <li class="mb-2">
+                <a href="/teacher/mark-attendance" class="block py-2 px-3 rounded hover:bg-blue-600">Mark Attendance</a>
+            </li>
+            <li class="mb-2">
+                <a href="/teacher/view-attendance" class="block py-2 px-3 rounded hover:bg-blue-600">View Attendance</a>
+            </li>
+        </ul>
+    </aside>
+    <!-- Main Content -->
+    <main class="w-full md:w-3/4 bg-white p-6 rounded shadow">
+        <h2 class="text-2xl font-bold mb-4">Welcome, <%= user.name %></h2>
+        <!-- Teacher-specific content goes here -->
+        <p class="text-gray-700">Use the sidebar to mark attendance and view your attendance records.</p>
+    </main>
+</div>
+
+<%- include('partials/footer') %>

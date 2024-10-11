@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-white font-bold text-xl">Attendance System</a>
+
+            <% let users = typeof user !== 'undefined'? user: false  %>
+
+            <% if (users) { %>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white">Welcome, <%= users.name %></span>
+                    <a href="/logout" class="text-white hover:bg-blue-700 px-3 py-2 rounded">Logout</a>
+                </div>
+            <% } else { %>
+                <div class="flex items-center space-x-4">
+                    <a href="/api/admin/login" class="text-white hover:bg-blue-700 px-3 py-2 rounded">Admin Login</a>
+                    <a href="/api/teachers/login" class="text-white hover:bg-blue-700 px-3 py-2 rounded">Teacher Login</a>
+                </div>
+            <% } %>
+        </div>
+    </nav>
+    <div class="container mx-auto p-4">

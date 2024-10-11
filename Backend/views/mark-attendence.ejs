@@ -1,0 +1,115 @@
+<!-- views/mark-attendance.ejs -->
+<%- include('partials/header', { title: 'Mark Attendance', user: user }) %>
+
+<div class="max-w-4xl mx-auto bg-white p-8 border border-gray-200 rounded shadow">
+    <h2 class="text-2xl font-bold mb-6 text-blue-600">Mark Attendance</h2>
+    
+    <% if (success) { %>
+        <div class="bg-green-100 text-green-700 p-3 mb-4 rounded">
+            <%= success %>
+        </div>
+    <% } %>
+    <% if (error) { %>
+        <div class="bg-red-100 text-red-700 p-3 mb-4 rounded">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <!-- Attendance Form -->
+    <form action="/teacher/mark-attendance" method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Select Class -->
+            <div>
+                <label for="class" class="block text-gray-700">Class:</label>
+                <select id="class" name="class" required
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                    <option value="">Select Class</option>
+                    <% classes.forEach(classItem => { %>
+                        <option value="<%= classItem._id %>"><%= classItem.name %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <!-- Select Semester -->
+            <div>
+                <label for="semester" class="block text-gray-700">Semester:</label>
+                <select id="semester" name="semester" required
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                    <option value="">Select Semester</option>
+                    <% for(let i=1; i<=8; i++) { %>
+                        <option value="<%= i %>">Semester <%= i %></option>
+                    <% } %>
+                </select>
+            </div>
+            <!-- Select Branch -->
+            <div>
+                <label for="branch" class="block text-gray-700">Branch:</label>
+                <select id="branch" name="branch" required
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                    <option value="">Select Branch</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Electrical Engineering">Electrical Engineering</option>
+                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                    <option value="Civil Engineering">Civil Engineering</option>
+                    <!-- Add more branches as needed -->
+                </select>
+            </div>
+            <!-- Select Section -->
+            <div>
+                <label for="section" class="block text-gray-700">Section:</label>
+                <select id="section" name="section" required
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                    <option value="">Select Section</option>
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
+                    <!-- Add more sections as needed -->
+                </select>
+            </div>
+        </div>
+        <button type="submit"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-200">Load Students</button>
+    </form>
+
+    <% if (students && students.length > 0) { %>
+        <form action="/teacher/submit-attendance" method="POST" class="mt-8">
+            <input type="hidden" name="class" value="<%= selectedClass %>">
+            <input type="hidden" name="semester" value="<%= selectedSemester %>">
+            <input type="hidden" name="branch" value="<%= selectedBranch %>">
+            <input type="hidden" name="section" value="<%= selectedSection %>">
+            <table class="min-w-full mt-4 border border-gray-200">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="px-4 py-2 border">#</th>
+                        <th class="px-4 py-2 border">Student Name</th>
+                        <th class="px-4 py-2 border">
+                            <input type="checkbox" id="select-all" class="form-checkbox h-4 w-4 text-blue-600">
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% students.forEach((student, index) => { %>
+                        <tr>
+                            <td class="px-4 py-2 border text-center"><%= index + 1 %></td>
+                            <td class="px-4 py-2 border"><%= student.name %></td>
+                            <td class="px-4 py-2 border text-center">
+                                <input type="checkbox" name="attendance" value="<%= student._id %>" class="form-checkbox h-4 w-4 text-blue-600">
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <button type="submit"
+                class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200">Submit Attendance</button>
+        </form>
+    <% } %>
+</div>
+
+<script>
+    // Select All Checkbox Functionality
+    document.getElementById('select-all').addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('input[name="attendance"]');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+    });
+</script>
+
+<%- include('partials/footer') %>

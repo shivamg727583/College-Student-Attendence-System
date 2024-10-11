@@ -1,0 +1,37 @@
+<!-- views/admin-dashboard.ejs -->
+<%- include('partials/header', { title: 'Admin Dashboard', user: user }) %>
+
+<div class="flex flex-col md:flex-row">
+    <!-- Sidebar -->
+    <aside class="w-full md:w-1/4 bg-blue-500 text-white p-4 rounded shadow mb-4 md:mb-0">
+        <h3 class="text-xl font-semibold mb-4">Dashboard</h3>
+        <ul>
+            <li class="mb-2">
+                <a href="/admin/dashboard" class="block py-2 px-3 rounded hover:bg-blue-600">Home</a>
+            </li>
+            <li class="mb-2">
+                <a href="/admin/teachers" class="block py-2 px-3 rounded hover:bg-blue-600">Manage Teachers</a>
+            </li>
+            <li class="mb-2">
+                <a href="/admin/subjects" class="block py-2 px-3 rounded hover:bg-blue-600">Manage Subjects</a>
+            </li>
+            <li class="mb-2">
+                <a href="/admin/classes" class="block py-2 px-3 rounded hover:bg-blue-600">Manage Classes</a>
+            </li>
+            <li class="mb-2">
+                <a href="/admin/students" class="block py-2 px-3 rounded hover:bg-blue-600">Manage Students</a>
+            </li>
+            <li class="mb-2">
+                <a href="/admin/attendance" class="block py-2 px-3 rounded hover:bg-blue-600">Attendance Reports</a>
+            </li>
+        </ul>
+    </aside>
+    <!-- Main Content -->
+    <main class="w-full md:w-3/4 bg-white p-6 rounded shadow">
+        <h2 class="text-2xl font-bold mb-4">Welcome, <%= user.name %></h2>
+        <!-- Admin-specific content goes here -->
+        <p class="text-gray-700">Use the sidebar to manage Teachers, Subjects, Classes, Students, and view Attendance Reports.</p>
+    </main>
+</div>
+
+<%- include('partials/footer') %>

@@ -17,8 +17,10 @@ const AttendanceRecordSchema = new Schema({
             validator: function(value) {
                 // Ensure the date is not in the future
                 const today = new Date();
-                today.setHours(0, 0, 0, 0); // Set to start of today
-                return value <= today;
+                today.setUTCHours(0, 0, 0, 0);
+                const attendanceDate = new Date(value);
+                attendanceDate.setUTCHours(0, 0, 0, 0);
+                return attendanceDate <= today;
             },
             message: 'Attendance date cannot be in the future'
         }
@@ -28,9 +30,8 @@ const AttendanceRecordSchema = new Schema({
         enum: ['Present', 'Absent', 'Late', 'Excused'],
         required: [true, 'Attendance status is required']
     }
-}, { _id: false }); // Prevent creation of _id for subdocuments
+}, { _id: false, timestamps: true  });
 
-// Student Schema
 const StudentSchema = new Schema({
     name: {
         type: String,
@@ -99,10 +100,23 @@ const studentValidationSchema = Joi.object({
         'string.email': 'Please provide a valid email address',
         'any.required': 'Student email is required'
     }),
-    class: Joi.string().custom(objectId).required().messages({
-        'string.empty': 'Class ID is required',
-        'any.required': 'Class ID is required',
-        'any.invalid': 'Invalid Class ID'
+    enrollment_number: Joi.string().trim().required().messages({
+        'string.empty': 'Student enrollment number is required',
+        'any.required': 'Student enrollment number is required'
+    }),
+    // Removed 'class' field
+    class_name: Joi.string().trim().required().messages({
+        'string.empty': 'Class name is required',
+        'any.required': 'Class name is required'
+    }),
+    section: Joi.string().trim().required().messages({
+        'string.empty': 'Section is required',
+        'any.required': 'Section is required'
+    }),
+    semester: Joi.number().integer().min(1).required().messages({
+        'number.base': 'Semester must be a number',
+        'number.min': 'Semester must be at least 1',
+        'any.required': 'Semester is required'
     }),
     attendance: Joi.array().items(attendanceRecordValidationSchema).optional()
 });

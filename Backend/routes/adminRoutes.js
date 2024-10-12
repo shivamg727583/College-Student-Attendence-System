@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const loginLimiter = require("../utils/LoginLimit");
 const auth = require("../middlewares/AdminAuth");
 
+const adminManageRoutes = require('./adminManageRoutes');
+
 // Create Admin
 router.post("/register", async (req, res) => {
   // Validate request body
@@ -105,7 +107,6 @@ router.get("/logout", (req, res) => {
   res.status(200).send({ message: "Logged out successfully" });
 });
 
-module.exports = router;
 
 // Update Admin
 router.put("/edit/:id", auth, async (req, res) => {
@@ -123,6 +124,7 @@ router.delete("/delete/:id", auth, async (req, res) => {
   res.send(admin);
 });
 
-
+// manage all functionality of admin
+router.use('/',auth,adminManageRoutes)
 
 module.exports = router;

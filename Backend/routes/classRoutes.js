@@ -4,6 +4,7 @@ const auth = require('../middlewares/AdminAuth');
 const {ClassModel,validateClass }= require('../models/Class-model');
 const {SubjectModel} = require('../models/Subject-model');
 const {TeacherModel} = require('../models/Teacher-model');
+const {StudentModel }= require('../models/Student-model');
 
 
 ///      admin controller part 
@@ -43,6 +44,7 @@ router.post('/create-class', auth, async (req, res) => {
             }
         }
 
+        
         // Create new Class
         const classObj = new ClassModel({
             class_name,

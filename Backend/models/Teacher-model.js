@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Joi = require('joi');
-
 const Schema = mongoose.Schema;
 
 // Teacher Schema
@@ -61,16 +60,35 @@ const teacherValidationSchema = Joi.object({
         'string.min': 'Password must be at least 6 characters long',
         'any.required': 'Teacher password is required'
     }),
-    subjects: Joi.array().items(Joi.string().custom(objectId)).min(1).required().messages({
-        'array.base': 'Subjects must be an array of Subject IDs',
-        'array.min': 'At least one subject is required',
-        'any.required': 'Subjects are required'
-    }),
-    classes: Joi.array().items(Joi.string().custom(objectId)).min(1).required().messages({
-        'array.base': 'Classes must be an array of Class IDs',
-        'array.min': 'At least one class is required',
-        'any.required': 'Classes are required'
-    })
+    subjects: Joi.array().items(Joi.string()).required().messages({
+        'array.empty': 'Teacher subjects are required',
+        'any.required': 'Teacher subjects are required'
+        }),
+        classes: Joi.array().items(Joi.string()).required().messages({
+            'array.empty': 'Teacher classes are required',
+            'any.required': 'Teacher classes are required'
+            })
+    // subject_name: Joi.string().trim().optional().messages({
+    //     'string.empty': 'Subject name is required',
+    //     'any.required': 'Subject name is required'
+    // }),
+    // subject_code: Joi.string().trim().required().messages({
+    //     'string.empty': 'Subject code is required',
+    //     'any.required': 'Subject code is required'
+    // }),
+    // class_name: Joi.string().trim().required().messages({
+    //     'string.empty': 'Class name is required',
+    //     'any.required': 'Class name is required'
+    // }),
+    // section: Joi.string().trim().required().messages({
+    //     'string.empty': 'Section is required',
+    //     'any.required': 'Section is required'
+    // }),
+    // semester: Joi.number().integer().min(1).required().messages({
+    //     'number.base': 'Semester must be a number',
+    //     'number.min': 'Semester must be at least 1',
+    //     'any.required': 'Semester is required'
+    // }),
 });
 
 // Export both the Teacher model and the validation schema

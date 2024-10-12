@@ -3,65 +3,118 @@
 
 <div class="max-w-4xl mx-auto bg-white p-8 border border-gray-200 rounded shadow">
     <h2 class="text-2xl font-bold mb-6 text-blue-600">Mark Attendance</h2>
-    
-    <% if (success) { %>
-        <div class="bg-green-100 text-green-700 p-3 mb-4 rounded">
-            <%= success %>
-        </div>
-    <% } %>
-    <% if (error) { %>
-        <div class="bg-red-100 text-red-700 p-3 mb-4 rounded">
-            <%= error %>
-        </div>
-    <% } %>
 
     <!-- Attendance Form -->
-    <form action="/teacher/mark-attendance" method="POST">
+    <form action="/api/teachers/mark-attendance" method="POST"> <!-- Ensure this matches your backend route -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <!-- Select Class -->
             <div>
                 <label for="class" class="block text-gray-700">Class:</label>
-                <select id="class" name="class" required
+                <select id="class" name="class_name" required
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
-                    <option value="">Select Class</option>
-                    <% classes.forEach(classItem => { %>
-                        <option value="<%= classItem._id %>"><%= classItem.name %></option>
-                    <% }) %>
+                    <option value="">Select Class</option> <!-- Empty value for placeholder -->
+                    <% 
+                        // Create a Set to store unique class names
+                        const uniqueClasses = new Set();
+                        classes.forEach(classItem => {
+                            if (!uniqueClasses.has(classItem.class_name)) {
+                                uniqueClasses.add(classItem.class_name);
+                    %>
+                        <option value="<%= classItem.class_name %>" <%= selectedClass === classItem.class_name ? 'selected' : '' %>>
+                            <%= classItem.class_name %>
+                        </option>
+                    <% 
+                            }
+                        });
+                    %>
                 </select>
             </div>
+
+            <!-- Select Subject -->
+            <div>
+                <label for="subject" class="block text-gray-700">Subject:</label>
+                <select id="subject" name="subjectId" required
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
+                    <option value="">Select Subject</option> <!-- Empty value for placeholder -->
+                    <% 
+                        // Create a Set to store unique subjects
+                        const uniqueSubjects = new Set();
+                        subjects.forEach(subject => {
+                            if (!uniqueSubjects.has(subject.subject_name)) {
+                                uniqueSubjects.add(subject.subject_name);
+                    %>
+                        <option value="<%= subject._id %>" <%= selectedSubject === subject.subject_name ? 'selected' : '' %>>
+                            <%= subject.subject_name %>
+                        </option>
+                    <% 
+                            }
+                        });
+                    %>
+                </select>
+            </div>
+
             <!-- Select Semester -->
             <div>
                 <label for="semester" class="block text-gray-700">Semester:</label>
                 <select id="semester" name="semester" required
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
-                    <option value="">Select Semester</option>
-                    <% for(let i=1; i<=8; i++) { %>
-                        <option value="<%= i %>">Semester <%= i %></option>
-                    <% } %>
+                    <option value="">Select Semester</option> <!-- Empty value for placeholder -->
+                    <% 
+                        // Create a Set to store unique semesters
+                        const uniqueSemesters = new Set();
+                        classes.forEach(classItem => {
+                            if (!uniqueSemesters.has(classItem.semester)) {
+                                uniqueSemesters.add(classItem.semester);
+                    %>
+                        <option value="<%= classItem.semester %>" <%= selectedSemester === classItem.semester ? 'selected' : '' %>>
+                            Semester <%= classItem.semester %>
+                        </option>
+                    <% 
+                            }
+                        });
+                    %>
                 </select>
             </div>
+
             <!-- Select Branch -->
             <div>
                 <label for="branch" class="block text-gray-700">Branch:</label>
-                <select id="branch" name="branch" required
+                <select id="branch" name="branch" 
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
-                    <option value="">Select Branch</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Electrical Engineering">Electrical Engineering</option>
-                    <option value="Mechanical Engineering">Mechanical Engineering</option>
-                    <option value="Civil Engineering">Civil Engineering</option>
+                    <option value="">Select Branch</option> <!-- Empty value for placeholder -->
+                    <% 
+                        // Define unique branches manually or from data if dynamic
+                        const branches = ["Computer Science", "Electrical Engineering", "Mechanical Engineering", "Civil Engineering"];
+                        branches.forEach(branch => { 
+                    %>
+                        <option value="<%= branch %>" <%= selectedBranch === branch ? 'selected' : '' %>>
+                            <%= branch %>
+                        </option>
+                    <% }) %>
                     <!-- Add more branches as needed -->
                 </select>
             </div>
+
             <!-- Select Section -->
             <div>
                 <label for="section" class="block text-gray-700">Section:</label>
                 <select id="section" name="section" required
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
-                    <option value="">Select Section</option>
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
+                    <option value="">Select Section</option> <!-- Empty value for placeholder -->
+                    <% 
+                        // Create a Set to store unique sections
+                        const uniqueSections = new Set();
+                        classes.forEach(classItem => {
+                            if (!uniqueSections.has(classItem.section)) {
+                                uniqueSections.add(classItem.section);
+                    %>
+                        <option value="<%= classItem.section %>" <%= selectedSection === classItem.section ? 'selected' : '' %>>
+                            Section <%= classItem.section %>
+                        </option>
+                    <% 
+                            }
+                        });
+                    %>
                     <!-- Add more sections as needed -->
                 </select>
             </div>
@@ -71,11 +124,12 @@
     </form>
 
     <% if (students && students.length > 0) { %>
-        <form action="/teacher/submit-attendance" method="POST" class="mt-8">
+        <form action="/api/teachers/submit-attendance" method="POST" class="mt-8">
             <input type="hidden" name="class" value="<%= selectedClass %>">
             <input type="hidden" name="semester" value="<%= selectedSemester %>">
             <input type="hidden" name="branch" value="<%= selectedBranch %>">
             <input type="hidden" name="section" value="<%= selectedSection %>">
+            <input type="hidden" name="subject" value="<%= selectedSubject %>"> <!-- Added hidden field for subject -->
             <table class="min-w-full mt-4 border border-gray-200">
                 <thead>
                     <tr class="bg-gray-200">
@@ -101,7 +155,7 @@
             <button type="submit"
                 class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200">Submit Attendance</button>
         </form>
-    <% } %>
+    <% }  %>
 </div>
 
 <script>

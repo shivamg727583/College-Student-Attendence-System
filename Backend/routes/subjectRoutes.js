@@ -4,6 +4,12 @@ const auth = require("../middlewares/AdminAuth");
 const { SubjectModel, validateSubject } = require("../models/Subject-model");
 
 // admin controller part
+
+router.get('/create-subject',auth,(req,res)=>{
+  res.render('create-subject',{layout:false});
+})
+
+
 router.post("/create-subject", auth, async (req, res) => {
   try {
     const { subject_name, subject_code } = req.body;
@@ -33,6 +39,21 @@ router.get("/get-subjects", auth, async (req, res) => {
     res.send(err);
   }
 });
+
+router.get('/update/:id',auth,async(req,res)=>{
+  try {
+    const subject = await SubjectModel.findById(req.params.id);
+    res.render('update-subject',{layout:false,subject,
+      
+    });
+    
+  } catch (error) {
+    console.log(error);
+
+    res.redirect("/api/admin/dashboard")
+    
+  }
+})
 
 router.put("/update/:id", auth, async (req, res) => {
   try {

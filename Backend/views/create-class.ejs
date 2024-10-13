@@ -1,0 +1,196 @@
+<%- include('./partials/header')  %>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-2xl">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">Create a New Class</h2>
+
+        <form action="/api/class/create-class" method="POST" class="space-y-6">
+            <!-- Class Name -->
+            <div>
+                <label for="class_name" class="block text-gray-700 font-medium mb-2">Class Name<span class="text-red-500">*</span></label>
+                <input type="text" id="class_name" name="class_name" 
+                       value="<%= formData && formData.class_name ? formData.class_name : '' %>" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="Enter class name" required>
+                <% if (errors && errors.class_name) { %>
+                    <p class="text-red-500 text-sm mt-1"><%= errors.class_name.message %></p>
+                <% } %>
+            </div>
+
+            <!-- Section -->
+            <div>
+                <label for="section" class="block text-gray-700 font-medium mb-2">Section<span class="text-red-500">*</span></label>
+                <input type="text" id="section" name="section" 
+                       value="<%= formData && formData.section ? formData.section : '' %>" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="Enter section" required>
+                <% if (errors && errors.section) { %>
+                    <p class="text-red-500 text-sm mt-1"><%= errors.section.message %></p>
+                <% } %>
+            </div>
+
+            <!-- Semester -->
+            <div>
+                <label for="semester" class="block text-gray-700 font-medium mb-2">Semester<span class="text-red-500">*</span></label>
+                <input type="text" id="semester" name="semester" 
+                       value="<%= formData && formData.semester ? formData.semester : '' %>" 
+                       class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                       placeholder="Enter semester" required>
+                <% if (errors && errors.semester) { %>
+                    <p class="text-red-500 text-sm mt-1"><%= errors.semester.message %></p>
+                <% } %>
+            </div>
+
+            <!-- Subjects -->
+          <!-- Subjects -->
+<div>
+    <label class="block text-gray-700 font-medium mb-2">Subjects<span class="text-red-500">*</span></label>
+    <div id="subjects-container" class="space-y-4">
+        <% if (formData && formData.subjects && formData.subjects.length > 0) { %>
+            <% formData.subjects.forEach((subject, index) => { %>
+                <div class="flex flex-col space-y-2">
+                    <div class="flex space-x-4">
+                        <div class="w-1/2">
+                            <label class="block text-gray-600">Subject<span class="text-red-500">*</span></label>
+                           
+                                    <select name="subjects[<%= index  %>][subject]" 
+                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                    required>
+                                <option value="" class="bg-gray-100">Select Subject</option>
+                                <% subjects.forEach(subj => { %>
+                                    <option value="<%= subj._id %>" class="flex items-center justify-between border border-zinc-400 p-1 rounded"><%= subj.subject_name %> <%= subj.subject_code %></option>
+                                <% }) %>
+                            </select>
+                            <% if (errors && errors.subjects && errors.subjects[index] && errors.subjects[index].subject) { %>
+                                <p class="text-red-500 text-sm mt-1"><%= errors.subjects[index].subject.message %></p>
+                            <% } %>
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block text-gray-600">Teacher (optional)</label>
+                            <select name="subjects[<%= index %>][teacher]" 
+                                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <option value="">Select Teacher</option>
+                                <% teachers.forEach(teach => { %>
+                                    <option value="<%= teach._id %>" 
+                                        <%= formData.subjects[index].teacher == teach._id.toString() ? 'selected' : '' %>>
+                                        <%= teach.name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                            <% if (errors && errors.subjects && errors.subjects[index] && errors.subjects[index].teacher) { %>
+                                <p class="text-red-500 text-sm mt-1"><%= errors.subjects[index].teacher.message %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeSubject(this)" class="self-end bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</button>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <!-- Default first subject -->
+            <div class="flex flex-col space-y-2">
+                <div class="flex space-x-4">
+                    <div class="w-1/2">
+                        <label class="block text-gray-600">Subject<span class="text-red-500">*</span></label>
+                        <select name="subjects[0][subject]" 
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                                required>
+                            <option value="" class="bg-gray-100">Select Subject</option>
+                            <% subjects.forEach(subj => { %>
+                                <option value="<%= subj._id %>" >
+                                    <span class="w-fit  flex items-center justify-between gap-10 border border-zinc-400 p-1 rounded"><%= subj.subject_name %> <%= subj.subject_code %></span>
+                                     </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-gray-600">Teacher (optional)</label>
+                        <select name="subjects[0][teacher]" 
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="">Select Teacher</option>
+                            <% teachers.forEach(teach => { %>
+                                <option value="<%= teach._id %>"><%= teach.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" onclick="removeSubject(this)" class="self-end bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</button>
+            </div>
+        <% } %>
+    </div>
+    <button type="button" onclick="addSubject()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Add Another Subject</button>
+    <% if (errors && errors.subjects) { %>
+        <p class="text-red-500 text-sm mt-1"><%= errors.subjects.message %></p>
+    <% } %>
+</div>
+
+
+            <!-- Students -->
+            <div>
+                <label for="students" class="block text-gray-700 font-medium mb-2">Student IDs (optional)</label>
+                <textarea id="students" name="students" rows="3" 
+                          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                          placeholder="Enter student IDs separated by commas"><%= formData && formData.students ? formData.students.join(', ') : '' %></textarea>
+                <% if (errors && errors.students) { %>
+                    <p class="text-red-500 text-sm mt-1"><%= errors.students.message %></p>
+                <% } %>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Create Class
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tailwind JS (optional for interactivity) -->
+    <script>
+        // Function to add a new subject-teacher group
+        function addSubject() {
+    const container = document.getElementById('subjects-container');
+    const subjectGroups = container.querySelectorAll('.flex.flex-col.space-y-2');
+    const newIndex = subjectGroups.length;
+
+    const subjectsOptions = `<% subjects.forEach(subj => { %>
+                                <option value="<%= subj._id %>"><%= subj.subject_name %>   <%= subj.subject_code %></option>
+                             <% }) %>`;
+    const teachersOptions = `<% teachers.forEach(teach => { %>
+                                <option value="<%= teach._id %>"><%= teach.name %></option>
+                             <% }) %>`;
+
+    const newSubjectHTML = `
+        <div class="flex flex-col space-y-2">
+            <div class="flex space-x-4">
+                <div class="w-1/2">
+                    <label class="block text-gray-600">Subject<span class="text-red-500">*</span></label>
+                    <select name="subjects[${newIndex}][subject]" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            required>
+                        <option value="">Select Subject</option>
+                        ${subjectsOptions}
+                    </select>
+                </div>
+                <div class="w-1/2">
+                    <label class="block text-gray-600">Teacher (optional)</label>
+                    <select name="subjects[${newIndex}][teacher]" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="">Select Teacher</option>
+                        ${teachersOptions}
+                    </select>
+                </div>
+            </div>
+            <button type="button" onclick="removeSubject(this)" class="self-end bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">Remove</button>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', newSubjectHTML);
+}
+
+        // Function to remove a subject-teacher group
+        function removeSubject(button) {
+            const group = button.closest('.flex.flex-col.space-y-2');
+            group.remove();
+        }
+    </script>
+</body>
+</html>

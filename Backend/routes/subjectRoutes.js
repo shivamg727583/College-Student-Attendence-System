@@ -6,7 +6,10 @@ const { SubjectModel, validateSubject } = require("../models/Subject-model");
 // admin controller part
 
 router.get('/create-subject',auth,(req,res)=>{
-  res.render('create-subject',{layout:false});
+  res.render('create-subject',{
+    successMessage: req.flash('success'), // If using connect-flash for messages
+    errorMessages: req.flash('error')      // If using connect-flash for messages
+  });
 })
 
 
@@ -23,52 +26,66 @@ router.post("/create-subject", auth, async (req, res) => {
       subject_name,
       subject_code,
     });
-    res.status(201).json(subject);
+    req.flash("success","Subject Created.")
+    res.redirect('/api/admin/dashboard');
+    // res.status(201).json(subject);
   } catch (error) {
     console.log(error);
     res.send(error);
   }
 });
 
-router.get("/get-subjects", auth, async (req, res) => {
-  try {
-    const subjects = await SubjectModel.find();
-    res.status(200).json(subjects);
-  } catch (err) {
-    console.log(err);
-    res.send(err);
-  }
-});
+
 
 router.get('/update/:id',auth,async(req,res)=>{
   try {
     const subject = await SubjectModel.findById(req.params.id);
-    res.render('update-subject',{layout:false,subject,
+    res.render('update-subject',{
+      subject,
+      successMessage: req.flash('success'), // If using connect-flash for messages
+      errorMessages: req.flash('error')      // If using connect-flash for messages
       
-    });
-    
+   });  
   } catch (error) {
     console.log(error);
-
-    res.redirect("/api/admin/dashboard")
+    req.flash("error","Error in updation")
+    res.redirect(`/api/admin/manage-subjects`);
     
   }
 })
 
-router.put("/update/:id", auth, async (req, res) => {
+router.post("/update/:id", auth, async (req, res) => {
   try {
     const subject = await SubjectModel.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
     );
-    res.status(200).json(subject);
+    req.flash("success","Subject Updated successfully");
+    res.redirect(`/api/admin/manage-subjects`);
+   
   } catch (err) {
     console.log(err);
-    res.send(err);
+    req.flash("error","Error in subject updation");
+    res.redirect(`/api/admin/manage-subjects`);
+
   }
 });
 
+
+router.get('/delete/:id',auth,async(req,res)=>{
+   try {
+    const subjects  = await  SubjectModel.findByIdAndDelete(req.params.id);
+    req.flash("success","Subject Deleted");
+    res.redirect('/api/admin/manage-subjects');
+    
+   } catch (error) {
+    console.log(error);
+    req.flash("error","Error in deletion");
+    res.redirect('/api/admin/manage-subjects');
+    
+   }
+})
 
 
 module.exports = router;

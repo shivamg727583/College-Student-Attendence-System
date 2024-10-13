@@ -41,7 +41,10 @@ router.post("/register", async (req, res) => {
 });
 
 router.get('/login',(req,res)=>{
-  res.render('AdminLogin')
+  res.render('AdminLogin',{
+    successMessage: req.flash('success'), // If using connect-flash for messages
+    errorMessages: req.flash('error')      // If using connect-flash for messages
+  })
 })
 
 // Login Admin
@@ -76,8 +79,9 @@ router.post("/login", loginLimiter, async (req, res) => {
       maxAge: 3600000, // 1 hour
     });
 
-    // Optionally, send a response indicating successful login
-    res.status(200).send({ message: "Logged in successfully" });
+    req.flash("success","Admin Login Successfully")
+   res.redirect('/api/admin/dashboard')
+    // res.status(200).send({ message: "Logged in successfully" });
   } catch (err) {
     console.error(err); // Log the error for debugging
     res.status(500).send("Internal Server Error");
@@ -88,11 +92,16 @@ router.post("/login", loginLimiter, async (req, res) => {
 router.get("/dashboard", auth, async (req, res) => {
   try {
     const admin = await AdminModel.findById(req.admin._id);
-    res.render('AdminDashboard', { user:admin });
+    res.render('AdminDashboard', { 
+      user:admin ,
+      successMessage: req.flash('success'), // If using connect-flash for messages
+      errorMessages: req.flash('error')      // If using connect-flash for messages
+    });
 
     // res.status(200).send(req.admin);
   } catch (err) {
     console.error(err);
+    req.flash("error","Failed to login admin")
     res.status(500).send("Internal Server Error");
   }
 });
@@ -104,7 +113,9 @@ router.get("/logout", (req, res) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
   });
-  res.status(200).send({ message: "Logged out successfully" });
+  req.flash("success","Logout successfully");
+  res.redirect("/api/admin/login");
+  // res.status(200).send({ message: "Logged out successfully" });
 });
 
 

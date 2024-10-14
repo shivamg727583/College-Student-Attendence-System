@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/AdminAuth");
 const { SubjectModel, validateSubject } = require("../models/Subject-model");
+const {TeacherModel } = require('../models/Teacher-model')
+const {ClassModel} = require('../models/Class-model')
 
 // admin controller part
 
@@ -73,19 +75,41 @@ router.post("/update/:id", auth, async (req, res) => {
 });
 
 
-router.get('/delete/:id',auth,async(req,res)=>{
-   try {
-    const subjects  = await  SubjectModel.findByIdAndDelete(req.params.id);
-    req.flash("success","Subject Deleted");
-    res.redirect('/api/admin/manage-subjects');
-    
-   } catch (error) {
-    console.log(error);
-    req.flash("error","Error in deletion");
-    res.redirect('/api/admin/manage-subjects');
-    
-   }
-})
+router.get('/delete/:id', auth, async (req, res) => {
+  const subjectId = req.params.id;
+
+  try {
+      // Delete the subject from the SubjectModel
+      const deletedSubject = await SubjectModel.findByIdAndDelete(subjectId);
+
+      if (!deletedSubject) {
+          req.flash("error", "Subject not found.");
+          return res.redirect('/api/admin/manage-subjects');
+      }
+
+      // Remove the subject from all classes in ClassModel
+      await ClassModel.updateMany(
+          { 'subjects.subject': subjectId }, // Find all classes with this subject
+          { $pull: { subjects: { subject: subjectId } } } // Remove the subject from the array
+      );
+
+      // Optionally, if teachers have subjects stored in a separate field, you can remove the subject from teachers as well.
+      // For example:
+      await TeacherModel.updateMany(
+          { 'subjects': subjectId }, // If teachers store subject IDs in their schema
+          { $pull: { subjects: subjectId } } // Remove the subject from the teacher's list of subjects
+      );
+
+      req.flash("success", "Subject deleted successfully and removed from all associated classes and teachers.");
+      res.redirect('/api/admin/manage-subjects');
+
+  } catch (error) {
+      console.error("Error deleting subject:", error);
+      req.flash("error", "Error in deletion.");
+      res.redirect('/api/admin/manage-subjects');
+  }
+});
+
 
 
 module.exports = router;

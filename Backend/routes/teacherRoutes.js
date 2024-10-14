@@ -109,13 +109,22 @@ router.get('/delete/:id', auth, async (req, res) => {
   const teacherId = req.params.id;
 
   try {
-      const deletedTeacher = await TeacherModel.findByIdAndDelete(teacherId).exec();
+      // Find and delete the teacher
+      const deletedTeacher = await TeacherModel.findByIdAndDelete(teacherId);
 
       if (!deletedTeacher) {
           req.flash('error', 'Teacher not found.');
       } else {
-          req.flash('success', 'Teacher deleted successfully.');
+          // After deleting the teacher, update all classes to remove the teacher from the subjects array
+          await ClassModel.updateMany(
+              { 'subjects.teacher': teacherId }, // Find all subjects with this teacher
+              { $unset: { 'subjects.$[elem].teacher': "" } }, // Remove teacher from subject
+              { arrayFilters: [{ 'elem.teacher': teacherId }] } // Filter subjects in the array
+          );
+
+          req.flash('success', 'Teacher deleted successfully and removed from class subjects.');
       }
+
       res.redirect('/api/teachers/manage-teachers');
   } catch (error) {
       console.error('Error deleting teacher:', error);
@@ -123,6 +132,7 @@ router.get('/delete/:id', auth, async (req, res) => {
       res.redirect('/api/teachers/manage-teachers');
   }
 });
+
 
 
 /////////////////   TEACHER HANDLE PART /////////////////////

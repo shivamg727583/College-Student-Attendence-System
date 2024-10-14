@@ -1,9 +1,11 @@
+
 const mongoose = require('mongoose');
 const Joi = require('joi');
 
 const Schema = mongoose.Schema;
 
-// Attendance Record Schema
+// Attendance Record Schema (as provided)
+
 const AttendanceRecordSchema = new Schema({
     subject: {
         type: Schema.Types.ObjectId,
@@ -15,7 +17,6 @@ const AttendanceRecordSchema = new Schema({
         required: [true, 'Date of attendance is required'],
         validate: {
             validator: function(value) {
-                // Ensure the date is not in the future
                 const today = new Date();
                 today.setUTCHours(0, 0, 0, 0);
                 const attendanceDate = new Date(value);
@@ -30,7 +31,7 @@ const AttendanceRecordSchema = new Schema({
         enum: ['Present', 'Absent', 'Late', 'Excused'],
         required: [true, 'Attendance status is required']
     }
-}, { _id: false, timestamps: true  });
+}, { _id: false, timestamps: true });
 
 const StudentSchema = new Schema({
     name: {
@@ -46,17 +47,27 @@ const StudentSchema = new Schema({
         trim: true,
         match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
-    enrollment_number:{
+    enrollment_number: {
         type: String,
         required: [true, 'Student roll number is required'],
         unique: true,
         trim: true
-        },
-    
-    class: {
-        type: Schema.Types.ObjectId,
-        ref: 'Class',
-        required: [true, 'Class reference is required']
+    },
+   
+    class_name: { // Added field
+        type: String,
+        required: [true, 'Class name is required'],
+        trim: true
+    },
+    section: { // Added field
+        type: String,
+        required: [true, 'Section is required'],
+        trim: true
+    },
+    semester: { // Added field
+        type: Number,
+        required: [true, 'Semester is required'],
+        min: 1
     },
     attendance: [AttendanceRecordSchema]
 }, { 
@@ -104,7 +115,6 @@ const studentValidationSchema = Joi.object({
         'string.empty': 'Student enrollment number is required',
         'any.required': 'Student enrollment number is required'
     }),
-    // Removed 'class' field
     class_name: Joi.string().trim().required().messages({
         'string.empty': 'Class name is required',
         'any.required': 'Class name is required'

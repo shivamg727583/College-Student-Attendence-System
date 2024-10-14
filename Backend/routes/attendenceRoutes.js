@@ -151,7 +151,7 @@ router.post('/submit-attendance', TeacherAuth, async (req, res) => {
                 await student.save();
                 
             }
-
+req.flash('success',"Attendence submitted")
             res.redirect('/api/teachers/mark-attendance'); // Redirect back to the attendance page or show a success message
         } catch (err) {
        

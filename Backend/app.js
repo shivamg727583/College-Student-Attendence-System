@@ -11,7 +11,7 @@ const adminRoute = require('./routes/adminRoutes');
 const teacherRoute = require('./routes/teacherRoutes')
 const subjectRoute = require('./routes/subjectRoutes')
 const classRoute = require('./routes/classRoutes');
-const studentRoute = require('./routes/StudentRoutes')
+const studentRoute = require('./routes/Students')
 
 
 app.use(express.json());

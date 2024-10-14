@@ -20,7 +20,7 @@ router.get('/manage-subjects',async(req,res)=>{
 })
 
 router.get('/manage-classes',async (req,res)=>{
-
+try {
     const classes = await ClassModel.find({}).exec();
     res.render('manage-class',{
         successMessage: req.flash('success'),
@@ -28,12 +28,18 @@ router.get('/manage-classes',async (req,res)=>{
         classes: classes,
         user:req.admin
     })
+    
+} catch (error) {
+    console.log(error)
+    res.send("failed in load classes : ",error)
+}
+   
 })
 
 router.get('/manage-students',async (req,res)=>{
-    const students = await StudentModel.find({})
-            .populate('class') // Assuming 'class' is a reference
-            .exec();
+    const students = await StudentModel.find({}).exec();
+
+        
     res.render('manage-students',{
         successMessage: req.flash('success'),
         errorMessages: req.flash('error')   ,

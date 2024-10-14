@@ -175,54 +175,5 @@ router.put("/update/:id", auth, async (req, res) => {
 });
 
 // Delete a student (Delete)
-router.delete("/delete/:id", auth, async (req, res) => {
-  const studentId = req.params.id;
-
-  // Validate ObjectId
-  if (!mongoose.Types.ObjectId.isValid(studentId)) {
-    return res.status(400).json({ message: "Invalid student ID." });
-  }
-
-  // Start a session for transaction
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    // Find the student
-    const student = await StudentModel.findById(studentId).session(session);
-    if (!student) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ message: "Student not found." });
-    }
-
-    // Remove the student
-    await StudentModel.findByIdAndDelete(studentId).session(session);
-
-    // Remove the student from the Class's students array
-    await ClassModel.findByIdAndUpdate(
-      student.class,
-      { $pull: { students: studentId } },
-      { session }
-    );
-
-    // Commit the transaction
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({ message: "Student deleted successfully." });
-  } catch (err) {
-    // Abort the transaction in case of error
-    await session.abortTransaction();
-    session.endSession();
-    console.error("Error deleting student:", err);
-    res
-      .status(500)
-      .json({
-        message: "Server error while deleting student.",
-        error: err.message,
-      });
-  }
-});
 
 module.exports = router;

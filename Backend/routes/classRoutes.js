@@ -6,6 +6,7 @@ const {ClassModel,validateClass }= require('../models/Class-model');
 const {SubjectModel} = require('../models/Subject-model');
 const {TeacherModel} = require('../models/Teacher-model');
 const {StudentModel }= require('../models/Student-model');
+const {AttendanceModel}= require('../models/Attendence-model');
 
 
 ///      admin controller part 
@@ -35,8 +36,6 @@ router.get('/create-class',auth,async(req,res)=>{
 router.post('/create-class', async (req, res) => {
     // Extract data from form
     const { class_name, section, semester, subjects, students } = req.body;
-
-    console.log(subjects)
 
     // Prepare data
     let classData = {
@@ -101,77 +100,52 @@ router.post('/create-class', async (req, res) => {
     }
 });
 
-
-
-// router.post('/create-class', auth, async (req, res) => {
-//     const { class_name, section, semester, subjects, students } = req.body;
-//     try {
-//         // Validate Subjects and (optionally) Teachers
-
-//           // Check if 'subjects' is an array of strings
-//           if (subjects.length > 0 && typeof subjects[0] === 'string') {
-//             // Transform it into array of objects with 'subject' field
-//             subjects = subjects.map(subId => ({ subject: subId }));
-//         }
-//         console.log(subjects)
-//         for (let i = 0; i < subjects.length; i++) {
-//             const { subject, teacher } = subjects[i];
-
-//             console.log(subject)
-//             // Check if Subject exists
-//             const subjectExists = await SubjectModel.findById(subject);
-//             if (!subjectExists) {
-//                 return res.status(400).send(`Subject with ID ${subject} does not exist.`);
-//             }
-
-//             // If a teacher is provided, validate the teacher
-//             if (teacher) {
-//                 const teacherExists = await TeacherModel.findById(teacher);
-//                 if (!teacherExists) {
-//                     return res.status(400).send(`Teacher with ID ${teacher} does not exist.`);
-//                 }
-
-//                 // Optional: Verify that the Teacher is assigned to the Subject
-//                 if (!teacherExists.subjects.includes(subject)) {
-//                     return res.status(400).send(`Teacher with ID ${teacher} is not assigned to Subject with ID ${subject}.`);
-//                 }
-//             }
-//         }
-
-        
-//         // Create new Class
-//         const classObj = new ClassModel({
-//             class_name,
-//             semester,
-//             section,
-//             subjects,
-//             students: students || []
-//         });
-
-//         await classObj.save();
-
-//         res.status(201).send(classObj);
-//     } catch (err) {
-//         console.error('Error creating class:', err);
-//         res.status(500).send('Internal Server Error');
-//     }
-// });
-
-
 router.get('/delete/:id', auth, async (req, res) => {
     const classId = req.params.id;
+    console.log('classid : ', classId);
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+        req.flash("error", "Invalid Class ID.");
+        return res.redirect('/api/admin/manage-classes');
+        // Alternatively:
+        // return res.status(400).send({ message: 'Invalid Class ID.' });
+    }
 
     try {
+        // Delete the class
         const deletedClass = await ClassModel.findByIdAndDelete(classId);
         if (!deletedClass) {
-            return res.status(404).send({ message: 'Class not found.' });
+            req.flash("error", "Class not found.");
+            return res.redirect('/api/admin/manage-classes');
+            // Alternatively:
+            // return res.status(404).send({ message: 'Class not found.' });
         }
-req.flash("success","class deleted")
-res.redirect('/api/admin/manage-classes')
+
+        // Remove the class from all teachers' "classes" array
+        const teacherUpdateResult = await TeacherModel.updateMany(
+            { classes: classId },
+            { $pull: { classes: classId } }
+        );
+        console.log(`Classes removed from ${teacherUpdateResult.nModified} teachers.`);
+
+        // Remove the class from all students' "class" field by setting it to null
+        const studentUpdateResult = await StudentModel.updateMany(
+            { class: classId },
+            { $set: { class: null } }
+        );
+        console.log(`Classes removed from ${studentUpdateResult.nModified} students.`);
+
+        req.flash("success", "Class deleted successfully.");
+        res.redirect('/api/admin/manage-classes');
+        // Alternatively, you can send a JSON response:
         // res.status(200).send({ message: 'Class deleted successfully.', class: deletedClass });
     } catch (err) {
         console.error('Error deleting class:', err);
-        res.status(500).send({ message: 'Internal Server Error' });
+        req.flash("error", "An error occurred while deleting the class.");
+        res.redirect('/api/admin/manage-classes');
+        // Alternatively:
+        // res.status(500).send({ message: 'Internal Server Error' });
     }
 });
 

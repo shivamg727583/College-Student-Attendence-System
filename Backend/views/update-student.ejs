@@ -1,0 +1,65 @@
+<%- include('./partials/header')  %>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center">Update Student</h2>
+            <form action="/api/students/edit/<%= student._id %>" method="POST">
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name:</label>
+                    <input type="text" id="name" name="name" value="<%= student.name %>"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="email" id="email" name="email" value="<%= student.email %>"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="enrollment_number" class="block text-sm font-medium text-gray-700">Enrollment Number:</label>
+                    <input type="text" id="enrollment_number" name="enrollment_number" value="<%= student.enrollment_number %>"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="class_name" class="block text-sm font-medium text-gray-700">Class Name:</label>
+                    <select id="class_name" name="class_name"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="csit" <%= student.class_name === 'csit' ? 'selected' : '' %>>CSIT</option>
+                        <option value="mechanical" <%= student.class_name === 'mechanical' ? 'selected' : '' %>>Mechanical</option>
+                        <option value="cs" <%= student.class_name === 'cs' ? 'selected' : '' %>>Computer Science</option>
+                        <option value="cyber" <%= student.class_name === 'cyber' ? 'selected' : '' %>>Cyber Security</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="section" class="block text-sm font-medium text-gray-700">Section:</label>
+                    <select id="section" name="section"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="A" <%= student.section === 'A' ? 'selected' : '' %>>A</option>
+                        <option value="B" <%= student.section === 'B' ? 'selected' : '' %>>B</option>
+                        <option value="C" <%= student.section === 'C' ? 'selected' : '' %>>C</option>
+                        <option value="D" <%= student.section === 'D' ? 'selected' : '' %>>D</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="semester" class="block text-sm font-medium text-gray-700">Semester:</label>
+                    <select id="semester" name="semester"
+                        class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="1" <%= student.semester === 1 ? 'selected' : '' %>>1</option>
+                        <option value="2" <%= student.semester === 2 ? 'selected' : '' %>>2</option>
+                        <option value="3" <%= student.semester === 3 ? 'selected' : '' %>>3</option>
+                        <option value="4" <%= student.semester === 4 ? 'selected' : '' %>>4</option>
+                        <option value="5" <%= student.semester === 5 ? 'selected' : '' %>>5</option>
+                        <option value="6" <%= student.semester === 6 ? 'selected' : '' %>>6</option>
+                        <option value="7" <%= student.semester === 7 ? 'selected' : '' %>>7</option>
+                        <option value="8" <%= student.semester === 8 ? 'selected' : '' %>>8</option>
+                    </select>
+                </div>
+                <div class="mt-6">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Update Student</button>
+                </div>
+                <div class="mt-4">
+                    <a href="/api/admin/manage-students" class="text-blue-500 hover:underline">Back to Students List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

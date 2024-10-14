@@ -1,0 +1,83 @@
+<%- include('./partials/header')  %>
+<a href="/api/admin/dashboard" class="p-3 py-1 bg-blue-600 rounded-lg text-white font-bold text-xl">←</a>
+
+<div class="w-full min-h-[80vh] flex items-center justify-center">
+    
+    <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center">Bulk Register Students</h1>
+        
+        <!-- Success Message -->
+        <% if (success && success.length > 0) { %>
+            <div class="bg-green-100 text-green-700 p-4 rounded mb-4">
+                <ul>
+                    <% success.forEach(function(msg) { %>
+                        <li><%= msg %></li>
+                    <% }); %>
+                </ul>
+            </div>
+        <% } %>
+        
+        <!-- Error Message -->
+        <% if (error && error.length > 0) { %>
+            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
+                <ul>
+                    <% error.forEach(function(msg) { %>
+                        <li><%= msg %></li>
+                    <% }); %>
+                </ul>
+            </div>
+        <% } %>
+        
+        <form action="/api/students/register-upload" method="POST" enctype="multipart/form-data">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="file">
+                    Upload CSV or Excel File
+                </label>
+                <input 
+                    type="file" 
+                    name="file" 
+                    id="file" 
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+                    required 
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                >
+            </div>
+            <div class="flex items-center justify-between">
+                <button 
+                    type="submit" 
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                >
+                    Register
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-6 text-sm text-gray-600">
+            <p>Ensure your file has the following columns:</p>
+            <ul class="list-disc list-inside">
+                <li>Name</li>
+                <li>Email</li>
+                <li>Enrollment Number</li>
+                <li>Class Name</li>
+                <li>Section</li>
+                <li>Semester</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <!-- Optional: Client-Side Validation Script -->
+    <script>
+        document.getElementById('file').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const allowedExtensions = /(\.csv|\.xlsx|\.xls)$/i;
+                if (!allowedExtensions.exec(file.name)) {
+                    alert('Only CSV and Excel files are allowed!');
+                    this.value = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

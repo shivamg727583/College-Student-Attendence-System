@@ -4,7 +4,10 @@ const { TeacherModel } = require('../models/Teacher-model');
 async function TeacherAuth(req, res, next) {
     const token = req.cookies.Teachertoken;
 
-    if (!token) return res.status(401).send('Access denied. No token provided.');
+    if (!token){
+        req.flash('error',"Invalid token.")
+        return res.status(401).redirect('/api/teachers/login')
+        };
 
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
@@ -18,7 +21,8 @@ async function TeacherAuth(req, res, next) {
 
         next(); // Proceed to the next middleware or route handler
     } catch (ex) {
-        res.status(400).send('Invalid token.');
+        req.flash('error',"Invalid token.")
+     res.status(401).redirect('/api/teachers/login')
     }
 }
 

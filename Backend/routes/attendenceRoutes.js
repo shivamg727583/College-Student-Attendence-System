@@ -11,19 +11,44 @@ const {AttendanceModel} = require('../models/Attendence-model')
 router.get("/mark-attendance",TeacherAuth,async(req,res)=>{
     try {
         // Fetch the logged-in Teacher
-        const teacher = await TeacherModel.findById(req.teacher._id).populate('classes subjects').exec();
+        const teacher = await TeacherModel.findById(req.teacher._id).populate('teachingSchedule.subjectId').exec();
         if (!teacher) {
             return res.status(404).send('Teacher not found.');
         }
 
-        // Fetch classes associated with the Teacher
-        const classes = await ClassModel.find({ _id: { $in: teacher.classes } }).exec();
-        const subjects = await SubjectModel.find({ _id: { $in: teacher.subjects } }).exec();
+      // Extract unique class_names, sections, semesters, and subjects from teachingSchedule
+      const classesSet = new Set();
+      const sectionsSet = new Set();
+      const semestersSet = new Set();
+      const subjectsSet = new Set();
+
+      teacher.teachingSchedule.forEach(schedule => {
+          classesSet.add(schedule.class_name);
+          sectionsSet.add(schedule.section);
+          semestersSet.add(schedule.semester);
+          subjectsSet.add(JSON.stringify(schedule.subjectId)); // Use JSON.stringify to ensure uniqueness based on ObjectId
+      });
+
+      // Convert Sets to Arrays
+      const classes = Array.from(classesSet);
+      const sections = Array.from(sectionsSet);
+      const semesters = Array.from(semestersSet);
+      const subjects = Array.from(subjectsSet).map(subjectStr => JSON.parse(subjectStr));
+
+      // Optional: Sort the arrays for better UI presentation
+      classes.sort();
+      sections.sort();
+      semesters.sort((a, b) => Number(a) - Number(b)); // Assuming semesters are numeric strings
+      subjects.sort((a, b) => a.subject_name.localeCompare(b.subject_name));
+      
+      
 
         res.render('mark-attendence', {
             user: teacher,
-            classes: classes,
-             subjects,
+             classes: classes,           // Array of unique class names
+            subjects: subjects,         // Array of unique subject objects
+            sections: sections,         // Array of unique sections
+            semesters: semesters, 
             students: null, // No students loaded yet
             selectedClass: null,
             selectedSemester: null,
@@ -37,56 +62,44 @@ router.get("/mark-attendance",TeacherAuth,async(req,res)=>{
     }
 });
 
-router.post('/mark-attendance', TeacherAuth, async (req, res) => {
-    const { class_name, semester, branch, section, subjectId } = req.body;
-
-    console.log({body:req.body})
-
-    console.log( { class_name, semester, branch, section, subjectId })
-
+router.post("/get-students", TeacherAuth, async (req, res) => {
     try {
+        const { class_name, section, semester, subjectId } = req.body;
 
-         // Retrieve the specific class document
-         const classDoc = await ClassModel.findOne({
-            class_name,
-            semester,
-            section
-        }).populate('students').exec();
+        console.log({body:req.body})
 
-        console.log(classDoc)
-
-        if (!classDoc) {
-            return res.status(404).send('Class not found with the provided details.');
-        }
-        // Fetch the teacher and verify class association
-        const teacher = await TeacherModel.findById(req.teacher._id).exec();
-        if (!teacher.classes.includes(classDoc._id)) {
-            return res.status(403).send('You are not authorized to mark attendance for this class.');
+        if (!class_name || !section || !semester || !subjectId) {
+            return res.status(400).json({ error: 'All fields are required.' });
         }
 
-       
+        // Fetch students based on class, section, semester, and subject
+        const students = await StudentModel.find({
+            class_name: 'cs',
+            section: 'D',
+            semester: 8,
+        }).exec();
 
-        // Fetch students enrolled in the class
-        const students = await StudentModel.find({ class: classDoc._id }).exec();
+      const selectedSubject = await SubjectModel.findById(subjectId);
+      const x = await TeacherModel.findById(req.teacher._id).populate('teachingSchedule.subjectId').select('teachingSchedule').teachingSchedule
+       const subjects =   req.teacher.teachingSchedule.map(ts => ts.subjectId);
+    //   console.log(subjects);
+      
+   console.log(x)
 
-        // Fetch subjects and classes for the dropdowns
-        const subjects = await SubjectModel.find({ _id: { $in: teacher.subjects } }).exec();
-        const classes = await ClassModel.find({ _id: { $in: teacher.classes } }).exec();
-        const selectedSubject = await SubjectModel.findById(subjectId).exec();
-
-        res.render('mark-attendence', { // Ensure template name matches
-            user: teacher,
-            classes,
+        res.render('mark-attendence', { // Render the same EJS template with students
+            user: req.teacher,
+            classes: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.class_name))),
             subjects,
-            students,
-            selectedClass: classDoc._id,
+            sections: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.section))),
+            semesters: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.semester))),
+            students: students,
+            selectedClass: class_name,
             selectedSemester: semester,
-            selectedBranch: branch,
             selectedSection: section,
-            selectedSubject: selectedSubject ? selectedSubject._id : null
+            selectedSubject, // Fetch the selected subject
         });
     } catch (err) {
-        console.error('Error processing mark attendance:', err);
+        console.error('Error fetching students:', err);
         res.status(500).send('Server Error');
     }
 });

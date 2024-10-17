@@ -1,0 +1,21 @@
+name,email,enrollment_number,class_name,section,semester
+Aarav Sharma,aarav.sharma1@college.edu,ENR001,CSIT,A,1
+Bhavna Gupta,bhavna.gupta2@college.edu,ENR002,Mechanical,B,2
+Chetan Mehta,chetan.mehta3@college.edu,ENR003,CS,C,3
+Deepa Singh,deepa.singh4@college.edu,ENR004,Cyber,D,4
+Esha Verma,esha.verma5@college.edu,ENR005,CSIT,A,2
+Farhan Khan,farhan.khan6@college.edu,ENR006,Mechanical,B,3
+Gauri Patel,gauri.patel7@college.edu,ENR007,CS,C,4
+Harshita Rao,harshita.rao8@college.edu,ENR008,Cyber,D,5
+Ishaan Joshi,ishaan.joshi9@college.edu,ENR009,CSIT,A,3
+Jhanvi Desai,jhanvi.desai10@college.edu,ENR010,Mechanical,B,4
+Kabir Malhotra,kabir.malhotra11@college.edu,ENR011,CS,C,5
+Laila Kapoor,laila.kapoor12@college.edu,ENR012,Cyber,D,6
+Mihir Nair,mihir.nair13@college.edu,ENR013,CSIT,A,4
+Nisha Bose,nisha.bose14@college.edu,ENR014,Mechanical,B,5
+Ojas Reddy,ojas.reddy15@college.edu,ENR015,CS,C,6
+Prisha Dutta,prisha.dutta16@college.edu,ENR016,Cyber,D,7
+Rohan Iyer,rohan.iyer17@college.edu,ENR017,CSIT,A,5
+Saanvi Shah,saanvi.shah18@college.edu,ENR018,Mechanical,B,6
+Tanvi Chauhan,tanvi.chauhan19@college.edu,ENR019,CS,C,7
+Vivaan Sinha,vivaan.sinha20@college.edu,ENR020,Cyber,D,8

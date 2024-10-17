@@ -1,103 +1,204 @@
-<!-- views/update-teacher.ejs -->
-<%- include('partials/header', { title: 'Update Teacher Profile', user: user }) %>
+<%- include('partials/header', { title: 'Edit Teacher', user: user }) %>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+    <div class="max-w-screen-md w-full space-y-8">
         <!-- Card Container -->
         <div class="bg-white p-8 border border-gray-200 rounded-lg shadow-lg">
             <div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Update Your Profile
+                    Edit Teacher Information
                 </h2>
                 <p class="mt-2 text-center text-sm text-gray-600">
-                    Make changes to your account below.
+                    Update the teacher's details and teaching schedule below.
                 </p>
             </div>
 
-            <!-- Success Message -->
-            <% if (successMessage) { %>
-                <div class="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-                    <span class="block sm:inline"><%= successMessage %></span>
-                </div>
-            <% } %>
-
-            <!-- Error Messages -->
-            <% if (errorMessages && errorMessages.length > 0) { %>
-                <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                    <ul class="list-disc pl-5">
-                        <% errorMessages.forEach(error => { %>
-                            <li><%= error %></li>
-                        <% }) %>
-                    </ul>
-                </div>
-            <% } %>
-
-            <!-- Update Form -->
-            <form class="mt-8 space-y-6" action="/api/teachers/update/<%= teacher._id  %>" method="POST">
-                <input type="hidden" name="teacherId" value="<%= teacher._id %>">
+            <form class="mt-8 space-y-6" action="/api/teachers/update-teacher/<%= teacher._id %>" method="POST">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <!-- Name Field -->
                     <div>
                         <label for="name" class="sr-only">Name</label>
-                        <input id="name" name="name" type="text"
+                        <input id="name" name="name" type="text" required
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                            placeholder="Full Name" value="<%= typeof oldInput !== 'undefined' ? oldInput.name : teacher.name %>">
+                            placeholder="Full Name" value="<%= teacher.name %>">
                     </div>
 
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="sr-only">Email address</label>
-                        <input id="email" name="email" type="email"
+                        <input id="email" name="email" type="email" required
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                            placeholder="Email address" value="<%= typeof oldInput !== 'undefined' ? oldInput.email : teacher.email %>">
+                            placeholder="Email address" value="<%= teacher.email %>">
                     </div>
 
-                    <!-- Password Field -->
-                    <div class="relative">
+                    <!-- Password Field (Leave blank to keep unchanged) -->
+                    <div>
                         <label for="password" class="sr-only">Password</label>
                         <input id="password" name="password" type="password"
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                            placeholder="New Password (leave blank to keep current password)">
-                        <button type="button" id="toggle-password" onclick="togglePasswordVisibility()"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
-                            Show
-                        </button>
+                            placeholder="New Password (leave blank to keep current)">
                     </div>
                 </div>
 
-                <!-- Subjects Selection -->
-                <div>
-                    <label for="subjects" class="block text-sm font-medium text-gray-700">Subjects</label>
-                    <select id="subjects" name="subjects[]" multiple
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <% subjects.forEach(subject => { %>
-                            <option value="<%= subject._id %>" <%= (oldInput && oldInput.subjects && oldInput.subjects.includes(subject._id.toString())) || (!oldInput && teacher.subjects.includes(subject._id.toString())) ? 'selected' : '' %> class='p-1 border border-zinc-400'>
-                                <%= subject.subject_name %>
-                            </option>
-                        <% }) %>
-                    </select>
-                    <p class="mt-2 text-sm text-gray-500">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple subjects.</p>
-                </div>
+                <!-- Teaching Schedule -->
+                <div id="teaching-schedule">
+                    <h3 class="text-sm font-medium text-gray-700">Teaching Schedule</h3>
+                    <div id="schedule-items" class="space-y-4">
+                        <% if (teacher.teachingSchedule && teacher.teachingSchedule.length > 0) { %>
+                            <% teacher.teachingSchedule.forEach((schedule, index) => { %>
+                                <div class="teaching-schedule-item bg-gray-50 p-4 rounded-lg shadow">
+                                    <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+                                        <!-- Subject Selection -->
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Subject</label>
+                                            <select name="teachingSchedule[<%= index %>][subjectId]" required
+                                                class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg p-1">
+                                                <option value="" disabled>Select Subject</option>
+                                                <% subjects.forEach(subject => { %>
+                                                    <option value="<%= subject._id %>" <%= schedule.subjectId.toString() === subject._id.toString() ? 'selected' : '' %>>
+                                                        <%= subject.subject_name %>
+                                                    </option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
 
-                <!-- Classes Selection -->
-                <div>
-                    <label for="classes" class="block text-sm font-medium text-gray-700">Classes</label>
-                    <select id="classes" name="classes[]" multiple
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <% classes.forEach(classItem => { %>
-                            <option value="<%= classItem._id %>" <%= (oldInput && oldInput.classes && oldInput.classes.includes(classItem._id.toString())) || (!oldInput && teacher.classes.includes(classItem._id.toString())) ? 'selected' : '' %> class='p-1 border border-zinc-400'>
-                                <%= classItem.class_name %> -  <%= classItem.section %>
-                            </option>
-                        <% }) %>
-                    </select>
-                    <p class="mt-2 text-sm text-gray-500">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple classes.</p>
+                                        <!-- Class Selection -->
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Class</label>
+                                            <select name="teachingSchedule[<%= index %>][class]" required
+                                                class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                                <option value="" disabled>Select Class</option>
+                                                <% className.forEach(classItem => { %>
+                                                    <option value="<%= classItem %>" <%= schedule.class === classItem ? 'selected' : '' %>>
+                                                        <%= classItem %>
+                                                    </option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
+
+                                        <!-- Section Selection -->
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Section</label>
+                                            <select name="teachingSchedule[<%= index %>][section]" required
+                                                class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                                <option value="" disabled>Select Section</option>
+                                                <% sections.forEach(section => { %>
+                                                    <option value="<%= section %>" <%= schedule.section === section ? 'selected' : '' %>>
+                                                        <%= section %>
+                                                    </option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
+
+                                        <!-- Semester Selection -->
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700">Semester</label>
+                                            <select name="teachingSchedule[<%= index %>][semester]" required
+                                                class="mt-1 block w-full px-1 bg-gray-100 rounded-lg border shadow-lg">
+                                                <option value="" disabled>Select Semester</option>
+                                                <% semesters.forEach(sem => { %>
+                                                    <option value="<%= sem %>" <%= schedule.semester === sem ? 'selected' : '' %>>
+                                                        <%= sem %>
+                                                    </option>
+                                                <% }) %>
+                                            </select>
+                                        </div>
+
+                                        <!-- Remove Button -->
+                                        <div class="flex items-end">
+                                            <button type="button" onclick="removeTeachingScheduleItem(this)"
+                                                class="mt-1 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <!-- If no existing schedule, provide one empty entry -->
+                            <div class="teaching-schedule-item bg-gray-50 p-4 rounded-lg shadow">
+                                <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+                                    <!-- Subject Selection -->
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">Subject</label>
+                                        <select name="teachingSchedule[0][subjectId]" required
+                                            class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg p-1">
+                                            <option value="" disabled selected>Select Subject</option>
+                                            <% subjects.forEach(subject => { %>
+                                                <option value="<%= subject._id %>">
+                                                    <%= subject.subject_name %>
+                                                </option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+
+                                    <!-- Class Selection -->
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">Class</label>
+                                        <select name="teachingSchedule[0][class]" required
+                                            class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                            <option value="" disabled selected>Select Class</option>
+                                            <% className.forEach(classItem => { %>
+                                                <option value="<%= classItem %>">
+                                                    <%= classItem %>
+                                                </option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+
+                                    <!-- Section Selection -->
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">Section</label>
+                                        <select name="teachingSchedule[0][section]" required
+                                            class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                            <option value="" disabled selected>Select Section</option>
+                                            <% sections.forEach(section => { %>
+                                                <option value="<%= section %>">
+                                                    <%= section %>
+                                                </option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+
+                                    <!-- Semester Selection -->
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">Semester</label>
+                                        <select name="teachingSchedule[0][semester]" required
+                                            class="mt-1 block w-full px-1 bg-gray-100 rounded-lg border shadow-lg">
+                                            <option value="" disabled selected>Select Semester</option>
+                                            <% semesters.forEach(sem => { %>
+                                                <option value="<%= sem %>">
+                                                    <%= sem %>
+                                                </option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+
+                                    <!-- Remove Button (Hidden by default as there's only one) -->
+                                    <div class="flex items-end">
+                                        <button type="button" onclick="removeTeachingScheduleItem(this)"
+                                            class="mt-1 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 hidden">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Button to Add More Teaching Schedule Items -->
+                    <div class="mt-4">
+                        <button type="button" onclick="addTeachingScheduleItem()" class="w-full p-2 rounded-lg bg-blue-400 text-white hover:bg-blue-500">
+                            Add Another Teaching Schedule
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
                 <div>
                     <button type="submit"
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Update Profile
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Update Teacher
                     </button>
                 </div>
             </form>
@@ -105,23 +206,109 @@
     </div>
 </div>
 
-<!-- Tailwind CSS CDN (if not included in header) -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-<%- include('partials/footer') %>
-
-<!-- Optional: JavaScript for Password Visibility Toggle -->
 <script>
-    function togglePasswordVisibility() {
-        const passwordInput = document.getElementById('password');
-        const toggleButton = document.getElementById('toggle-password');
+    // Function to add a new teaching schedule item
+    function addTeachingScheduleItem() {
+        const scheduleContainer = document.getElementById('schedule-items');
+        const currentItems = scheduleContainer.querySelectorAll('.teaching-schedule-item');
+        const index = currentItems.length;
 
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggleButton.innerHTML = 'Hide';
-        } else {
-            passwordInput.type = 'password';
-            toggleButton.innerHTML = 'Show';
+        const newItem = document.createElement('div');
+        newItem.className = 'teaching-schedule-item bg-gray-50 p-4 rounded-lg shadow';
+        newItem.innerHTML = `
+            <div class="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+                <!-- Subject Selection -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Subject</label>
+                    <select name="teachingSchedule[${index}][subjectId]" required
+                        class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg p-1">
+                        <option value="" disabled selected>Select Subject</option>
+                        <% subjects.forEach(subject => { %>
+                            <option value="<%= subject._id %>">
+                                <%= subject.subject_name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Class Selection -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Class</label>
+                    <select name="teachingSchedule[${index}][class]" required
+                        class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                        <option value="" disabled selected>Select Class</option>
+                        <% className.forEach(classItem => { %>
+                            <option value="<%= classItem %>">
+                                <%= classItem %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Section Selection -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Section</label>
+                    <select name="teachingSchedule[${index}][section]" required
+                        class="mt-1 block w-full bg-gray-100 rounded-lg border shadow-lg">
+                        <option value="" disabled selected>Select Section</option>
+                        <% sections.forEach(section => { %>
+                            <option value="<%= section %>">
+                                <%= section %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Semester Selection -->
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700">Semester</label>
+                    <select name="teachingSchedule[${index}][semester]" required
+                        class="mt-1 block w-full px-1 bg-gray-100 rounded-lg border shadow-lg">
+                        <option value="" disabled selected>Select Semester</option>
+                        <% semesters.forEach(sem => { %>
+                            <option value="<%= sem %>">
+                                <%= sem %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <!-- Remove Button -->
+                <div class="flex items-end">
+                    <button type="button" onclick="removeTeachingScheduleItem(this)"
+                        class="mt-1 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `;
+        scheduleContainer.appendChild(newItem);
+    }
+
+    // Function to remove a teaching schedule item
+    function removeTeachingScheduleItem(button) {
+        const item = button.closest('.teaching-schedule-item');
+        if (item) {
+            item.remove();
+            updateTeachingScheduleIndices();
         }
     }
+
+    // Function to update the indices of teaching schedule items after removal
+    function updateTeachingScheduleIndices() {
+        const scheduleContainer = document.getElementById('schedule-items');
+        const items = scheduleContainer.querySelectorAll('.teaching-schedule-item');
+
+        items.forEach((item, index) => {
+            // Update the name attributes for each select element
+            const selects = item.querySelectorAll('select');
+            selects.forEach(select => {
+                const name = select.getAttribute('name');
+                const updatedName = name.replace(/teachingSchedule\[\d+\]/, `teachingSchedule[${index}]`);
+                select.setAttribute('name', updatedName);
+            });
+        });
+    }
 </script>
+    
+<%- include('partials/footer') %>

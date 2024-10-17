@@ -45,6 +45,9 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Classes 
                         </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Semesters 
+                        </th>
                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Actions 
                         </th>
@@ -70,10 +73,10 @@
                                     <%= teacher.email %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <% if (teacher.subjects && teacher.subjects.length > 0) { %>
+                                    <% if (teacher.teachingSchedule && teacher.teachingSchedule.length > 0) { %>
                                         <ul class="list-disc list-inside">
-                                            <% teacher.subjects.forEach(subject => { %>
-                                                <li><%= subject.subject_name %> </li>
+                                            <% teacher.teachingSchedule.forEach(teach => { %>
+                                                <li><%= teach.subjectId.subject_name %> </li>
                                             <% }) %>
                                         </ul>
                                     <% } else { %>
@@ -81,14 +84,25 @@
                                     <% } %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <% if (teacher.classes && teacher.classes.length > 0) { %>
+                                    <% if (teacher.teachingSchedule && teacher.teachingSchedule.length > 0) { %>
                                         <ul class="list-disc list-inside">
-                                            <% teacher.classes.forEach(classItem => { %>
-                                                <li class=""><%= classItem.class_name %> - <%= classItem.section %></li>
+                                            <%  teacher.teachingSchedule.forEach(teach => { %>
+                                                <li class=""><%= teach.class_name %> - <%= teach.section %></li>
                                             <% }) %>
                                         </ul>
                                     <% } else { %>
                                         <span class="text-gray-500">No classes assigned</span>
+                                    <% } %>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <% if (teacher.teachingSchedule && teacher.teachingSchedule.length > 0) { %>
+                                        <ul class="list-disc list-inside">
+                                            <%  teacher.teachingSchedule.forEach(teach => { %>
+                                                <li class=""><%= teach.semester %> Sem </li>
+                                            <% }) %>
+                                        </ul>
+                                    <% } else { %>
+                                        <span class="text-gray-500">No semesters assigned</span>
                                     <% } %>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

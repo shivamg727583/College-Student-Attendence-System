@@ -1,8 +1,8 @@
-<!-- views/register-teacher.ejs -->
 <%- include('partials/header', { title: 'Teacher Registration', user: user }) %>
+<a href="/api/admin/dashboard" class="p-2 rounded-lg bg-blue-400 text-white text-xl">←</a>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+<div class="min-h-screen flex bg-red-400 justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-screen w-full space-y-8">
         <!-- Card Container -->
         <div class="bg-white p-8 border border-gray-200 rounded-lg shadow-lg">
             <div>
@@ -17,8 +17,6 @@
                 </p>
             </div>
 
-
-            <!-- Registration Form -->
             <form class="mt-8 space-y-6" action="/api/teachers/register-teacher" method="POST">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <!-- Name Field -->
@@ -28,7 +26,7 @@
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                             placeholder="Full Name" value="<%= typeof oldInput !== 'undefined' ? oldInput.name : '' %>">
                     </div>
-
+            
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="sr-only">Email address</label>
@@ -36,7 +34,7 @@
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                             placeholder="Email address" value="<%= typeof oldInput !== 'undefined' ? oldInput.email : '' %>">
                     </div>
-
+            
                     <!-- Password Field -->
                     <div>
                         <label for="password" class="sr-only">Password</label>
@@ -45,36 +43,53 @@
                             placeholder="Password">
                     </div>
                 </div>
+            
+                <!-- Teaching Schedule -->
+                <div id="teaching-schedule">
+                    <h3 class="text-sm font-medium text-gray-700">Teaching Schedule</h3>
+                    <div class="space-y-4">
+                        <div class="teaching-schedule-item">
+                            <div class="flex space-x-4 flex-wrap gap-2 items-center justify-center md:flex-nowrap">
+                                <select name="teachingSchedule[0][subjectId]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg p-1">
+                                    <option value="" disabled selected>Select Subject</option>
+                                    <% subjects.forEach(subject => { %>
+                                        <option value="<%= subject._id %>">
+                                            <%= subject.subject_name %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <select name="teachingSchedule[0][class_name]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                    <option value="" disabled selected>Select Class</option>
+                                    <% className.forEach(classItem => { %>
+                                        <option value="<%= classItem %>">
+                                            <%= classItem %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <select name="teachingSchedule[0][section]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg">
+                                    <option value="" disabled selected>Select Section</option>
+                                    <% sections.forEach(section => { %>
+                                        <option value="<%= section %>">
+                                            <%= section %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <select name="teachingSchedule[0][semester]" required class="block w-full px-1 bg-gray-100 rounded-lg border shadow-lg">
+                                    <option value="" disabled selected>Select Semester</option>
+                                    <% semesters.forEach(sem => { %>
+                                        <option value="<%= sem %>">
+                                            <%= sem %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
 
-                <!-- Subjects Selection -->
-                <div>
-                    <label for="subjects" class="block text-sm font-medium text-gray-700">Subjects</label>
-                    <select id="subjects" name="subjects[]" multiple required
-                        class="mt-1 block w-full pl-3 pr-10 py-2  text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <% subjects.forEach(subject => { %>
-                            <option value="<%= subject._id %>" <%= (oldInput && oldInput.subjects && oldInput.subjects.includes(subject._id.toString())) ? 'selected' : '' %> class="border p-1 border-gray-400">
-                                <%= subject.subject_name %> 
-                            </option>
-                        <% }) %>
-                    </select>
-                    <p class="mt-2 text-sm text-gray-500">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple subjects.</p>
+                        <!-- Button to Add More Teaching Schedule Items -->
+                        <button type="button" onclick="addTeachingScheduleItem()" class="p-2 rounded-lg bg-blue-400 text-white">Add Another Teaching Schedule</button>
+                    </div>
                 </div>
-
-                <!-- Classes Selection -->
-                <div>
-                    <label for="classes" class="block text-sm font-medium text-gray-700">Classes</label>
-                    <select id="classes" name="classes[]" multiple required
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <% classes.forEach(classItem => { %>
-                            <option value="<%= classItem._id %>" <%= (oldInput && oldInput.classes && oldInput.classes.includes(classItem._id.toString())) ? 'selected' : '' %> class="border  border-gray-400 p-1">
-                                <%= classItem.class_name %>-<%= classItem.section %>
-                            </option>
-                        <% }) %>
-                    </select>
-                    <p class="mt-2 text-sm text-gray-500">Hold down the Ctrl (Windows) or Command (Mac) button to select multiple classes.</p>
-                </div>
-
-               
+            
                 <!-- Submit Button -->
                 <div>
                     <button type="submit"
@@ -87,5 +102,50 @@
     </div>
 </div>
 
-
+<script>
+    function addTeachingScheduleItem() {
+        const scheduleContainer = document.getElementById('teaching-schedule').querySelector('.space-y-4');
+        const index = scheduleContainer.querySelectorAll('.teaching-schedule-item').length;
+        const newItem = document.createElement('div');
+        newItem.className = 'teaching-schedule-item mt-3';
+        newItem.innerHTML = `
+            <div class="flex space-x-4 flex-wrap gap-2 items-center justify-center md:flex-nowrap mt-3">
+                <select name="teachingSchedule[${index}][subjectId]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg">
+                    <option value="" disabled selected>Select Subject</option>
+                    <% subjects.forEach(subject => { %>
+                        <option value="<%= subject._id %>">
+                            <%= subject.subject_name %>
+                        </option>
+                    <% }) %>
+                </select>
+                <select name="teachingSchedule[${index}][class_name]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg">
+                    <option value="" disabled selected>Select Class</option>
+                    <% className.forEach(classItem => { %>
+                        <option value="<%= classItem %>">
+                            <%= classItem %>
+                        </option>
+                    <% }) %>
+                </select>
+                <select name="teachingSchedule[${index}][section]" required class="block w-full bg-gray-100 rounded-lg border shadow-lg">
+                    <option value="" disabled selected>Select Section</option>
+                    <% sections.forEach(section => { %>
+                        <option value="<%= section %>">
+                            <%= section %>
+                        </option>
+                    <% }) %>
+                </select>
+                <select name="teachingSchedule[${index}][semester]" required class="block w-full px-1 bg-gray-100 rounded-lg border shadow-lg">
+                    <option value="" disabled selected>Select Semester</option>
+                    <% semesters.forEach(sem => { %>
+                        <option value="<%= sem %>">
+                            <%= sem %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+        `;
+        scheduleContainer.insertBefore(newItem, scheduleContainer.querySelector('button'));
+    }
+</script>
+    
 <%- include('partials/footer') %>

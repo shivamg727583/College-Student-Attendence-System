@@ -29,6 +29,7 @@ const ClassSchema = new Schema({
         required: [true, 'Section is required'],
         trim: true
     },
+
     semester: {
         type: String,
         required: [true, 'Semester is required'],

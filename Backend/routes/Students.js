@@ -77,27 +77,60 @@ router.get('/edit/:id', async (req, res) => {
 
 // POST route to handle the form submission
 router.post('/edit/:id', async (req, res) => {
-    try {
-        const studentId = req.params.id;
-        const updatedData = req.body; // Get the updated data from the form
+  try {
+      const studentId = req.params.id;
+      const updatedData = req.body; // Get the updated data from the form
 
-        // Update the student in the database
-        const updatedStudent = await StudentModel.findByIdAndUpdate(studentId, updatedData, { new: true });
+      // Find the existing student record
+      const existingStudent = await StudentModel.findById(studentId);
+      if (!existingStudent) {
+          return res.status(404).send('Student not found');
+      }
 
-        if (!updatedStudent) {
-            return res.status(404).send('Student not found');
-        }
-req.flash("success","Updated successfully");
-        res.redirect('/api/admin/manage-students'); // Redirect to the students list page or wherever you want
-    } catch (error) {
-        console.error(error);
+      // Check if class_name, section, or semester has changed
+      const classChanged = 
+          existingStudent.class_name !== updatedData.class_name ||
+          existingStudent.section !== updatedData.section ||
+          existingStudent.semester !== parseInt(updatedData.semester, 10); // Ensure to parse semester as an integer
 
-        res.status(500).send('Server error');
-    }
+      // Update the student in the database
+      const updatedStudent = await StudentModel.findByIdAndUpdate(studentId, updatedData, { new: true });
+
+      if (!updatedStudent) {
+          return res.status(404).send('Student not found');
+      }
+
+      if (classChanged) {
+          // If the class has changed, update the class model accordingly
+
+          // Create a key to identify the current class
+          const oldClassKey = `${existingStudent.class_name}|${existingStudent.section}|${existingStudent.semester}`;
+          const newClassKey = `${updatedData.class_name}|${updatedData.section}|${updatedData.semester}`;
+
+          // Remove the student from the old class
+          await ClassModel.updateOne(
+              { class_name: existingStudent.class_name, section: existingStudent.section, semester: existingStudent.semester },
+              { $pull: { students: studentId } } // Remove student ID from old class
+          );
+
+          // Add the student to the new class
+          await ClassModel.updateOne(
+              { class_name: updatedData.class_name, section: updatedData.section, semester: updatedData.semester },
+              { $addToSet: { students: studentId } } // Add student ID to new class
+          );
+
+          console.log(`Student ${studentId} moved from class ${oldClassKey} to ${newClassKey}`);
+      }
+
+      req.flash("success", "Updated successfully");
+      res.redirect('/api/admin/manage-students'); // Redirect to the students list page or wherever you want
+  } catch (error) {
+      console.error(error);
+      req.flash("error", "Server error");
+      res.status(500).send('Server error');
+  }
 });
 
 module.exports = router;
 
 
-
-module.exports = router;

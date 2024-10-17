@@ -7,6 +7,10 @@ const loginLimiter = require("../utils/LoginLimit");
 const auth = require("../middlewares/AdminAuth");
 
 const adminManageRoutes = require('./adminManageRoutes');
+const {TeacherModel} = require("../models/Teacher-model");
+const {StudentModel} = require("../models/Student-model");
+const {ClassModel} = require("../models/Class-model");
+const {SubjectModel} = require("../models/Subject-model");
 
 // Create Admin
 router.post("/register", async (req, res) => {
@@ -91,9 +95,14 @@ router.post("/login", loginLimiter, async (req, res) => {
 // Protected Route Example
 router.get("/dashboard", auth, async (req, res) => {
   try {
+    const teachers = await TeacherModel.find({});
+    const students = await StudentModel.find({});
+    const classes = await ClassModel.find({});
+    const subjects = await SubjectModel.find({});
     const admin = await AdminModel.findById(req.admin._id);
     res.render('AdminDashboard', { 
       user:admin ,
+      teachers, students, classes, subjects,
       successMessage: req.flash('success'), // If using connect-flash for messages
       errorMessages: req.flash('error')      // If using connect-flash for messages
     });

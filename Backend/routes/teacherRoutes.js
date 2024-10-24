@@ -47,59 +47,70 @@ router.post("/register-teacher", auth, async (req, res) => {
   // Validate input data using Joi
   const { error } = validateTeacher(req.body);
   if (error) {
-    console.log(error)
-    
-      return res.status(400).json({ message: error.details[0].message });
+    console.log(error);
+    return res.status(400).json({ message: error.details[0].message });
   }
-  console.log("hyyee")
 
- 
   const { name, email, password, teachingSchedule } = req.body;
- 
-
-  // Extracting classes from teachingSchedule
-  const classes = teachingSchedule.map(schedule => ({
-    class_name: schedule.class_name,
-    section: schedule.section,
-    semester: schedule.semester,
-    subjectId: schedule.subjectId
-}));
-
-
- 
 
   try {
-      // Check for existing email
-      const existingTeacher = await TeacherModel.findOne({ email: email });
-      if (existingTeacher) {
-          return res.status(400).json({ message: "Teacher with given email already exists." });
+    // Check for existing email
+    const existingTeacher = await TeacherModel.findOne({ email: email });
+    if (existingTeacher) {
+      return res.status(400).json({ message: "Teacher with given email already exists." });
+    }
+
+    // Prepare the teachingSchedule with classId
+    const scheduleWithClassIdPromises = teachingSchedule.map(async (schedule) => {
+      // Find the class by class_name, section, and semester
+      const classObj = await ClassModel.findOne({
+        class_name: schedule.class_name,
+        section: schedule.section,
+        semester: schedule.semester
+      });
+
+      // If class does not exist, throw an error
+      if (!classObj) {
+        throw new Error(`Class with name ${schedule.class_name}, section ${schedule.section}, semester ${schedule.semester} does not exist.`);
       }
 
-      // Hash the password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      // Return the schedule with the classId populated
+      return {
+        ...schedule,
+        classId: classObj._id,  // Add the classId to the schedule
+        subjectId: schedule.subjectId
+      };
+    });
 
-      // Create the Teacher document
-      const teacher = new TeacherModel({
-          name,
-          email,
-          password: hashedPassword,
-          teachingSchedule:classes    // Array of class objects extracted from teachingSchedule
-      });
+    // Wait for all class lookups to complete
+    const teachingScheduleWithClassId = await Promise.all(scheduleWithClassIdPromises);
 
-      // Save the teacher document to the database
-      const savedTeacher = await teacher.save();
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    req.flash("success","Teacher register successfully");
-    res.redirect('/api/teachers/register-teacher')
+    // Create the Teacher document
+    const teacher = new TeacherModel({
+      name,
+      email,
+      password: hashedPassword,
+      teachingSchedule: teachingScheduleWithClassId // Array of schedule objects with classId
+    });
+
+    // Save the teacher document to the database
+    const savedTeacher = await teacher.save();
+
+    req.flash("success", "Teacher registered successfully");
+    res.redirect('/api/teachers/register-teacher');
   } catch (err) {
-      console.error("Error registering teacher:", err);
-      res.status(500).json({
-          message: "Server error while registering teacher.",
-          error: err.message,
-      });
+    console.error("Error registering teacher:", err);
+    res.status(500).json({
+      message: "Server error while registering teacher.",
+      error: err.message,
+    });
   }
 });
+
 router.get('/manage-teachers', auth, async (req, res) => {
   try {
       // Fetch all teachers, populate subjects and classes if they are references
@@ -190,43 +201,69 @@ try {
   }
 });
 
-
-router.post('/update-teacher/:id', auth,async (req, res) => {
+router.post('/update-teacher/:id', auth, async (req, res) => {
   try {
-      const { name, email, password, teachingSchedule } = req.body;
+    const { name, email, password, teachingSchedule } = req.body;
+  
 
-      // Find the teacher by ID
-      const teacher = await TeacherModel.findById(req.params.id);
-      if (!teacher) {
-          return res.status(404).send('Teacher not found');
+    // Find the teacher by ID
+    const teacher = await TeacherModel.findById(req.params.id);
+    if (!teacher) {
+      return res.status(404).send('Teacher not found');
+    }
+
+    // Update basic information
+    teacher.name = name;
+    teacher.email = email;
+
+    // Update password if provided
+    if (password && password.trim() !== '') {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      teacher.password = hashedPassword;
+    }
+
+    // Process teaching schedule: update with classId
+    const updatedSchedulePromises = teachingSchedule.map(async (schedule) => {
+      // Find the class by class_name, section, and semester
+      const classObj = await ClassModel.findOne({
+        class_name: schedule.class,
+        section: schedule.section,
+        semester: schedule.semester
+      });
+
+      // If class does not exist, throw an error
+      if (!classObj) {
+        throw new Error(`Class with name ${schedule.class}, section ${schedule.section}, semester ${schedule.semester} does not exist.`);
       }
 
-      // Update basic information
-      teacher.name = name;
-      teacher.email = email;
+      // Return the updated schedule with classId included
+      return {
+        subjectId: schedule.subjectId,
+        class_name: schedule.class,
+        section: schedule.section,
+        semester: schedule.semester,
+        classId: classObj._id // Include the classId
+      };
+    });
 
-      // Update password if provided
-      if (password && password.trim() !== '') {
-          const hashedPassword = await bcrypt.hash(password, 10);
-          teacher.password = hashedPassword;
-      }
+    // Wait for all class lookups to complete
+    const updatedTeachingSchedule = await Promise.all(updatedSchedulePromises);
 
-      // Update teaching schedule
-      teacher.teachingSchedule = teachingSchedule.map(schedule => ({
-          subjectId: schedule.subjectId,
-          class_name: schedule.class,
-          section: schedule.section,
-          semester: schedule.semester
-      }));
+    // Update the teacher's teachingSchedule
+    teacher.teachingSchedule = updatedTeachingSchedule;
 
-      // Save the updated teacher
-      await teacher.save();
-req.flash('success','teacher profile updated')
-      res.redirect('/api/teachers/manage-teachers'); // Redirect to the teacher's profile or another appropriate page
+    // Save the updated teacher data to the database
+    await teacher.save();
+    classObj.subjects
+
+    req.flash('success', 'Teacher profile updated successfully');
+    res.redirect('/api/teachers/manage-teachers'); // Redirect to the appropriate page
   } catch (error) {
-      console.error(error);
-      res.status(500).send('Error updating teacher');
-     
+    console.error('Error updating teacher:', error);
+    req.flash('error', 'Error updating teacher profile');
+    // res.redirect('/api/teachers/manage-teachers'); // Redirect to the appropriate page
+
+    res.status(500).send('Error updating teacher');
   }
 });
 

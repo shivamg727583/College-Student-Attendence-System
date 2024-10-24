@@ -33,20 +33,22 @@ router.get("/mark-attendance",TeacherAuth,async(req,res)=>{
       const classes = Array.from(classesSet);
       const sections = Array.from(sectionsSet);
       const semesters = Array.from(semestersSet);
-      const subjects = Array.from(subjectsSet).map(subjectStr => JSON.parse(subjectStr));
+    //   const subjects = Array.from(subjectsSet).map(subjectStr => JSON.parse(subjectStr));
 
       // Optional: Sort the arrays for better UI presentation
       classes.sort();
       sections.sort();
       semesters.sort((a, b) => Number(a) - Number(b)); // Assuming semesters are numeric strings
-      subjects.sort((a, b) => a.subject_name.localeCompare(b.subject_name));
+    //   subjects.sort((a, b) => a.subject_name.localeCompare(b.subject_name));
       
+      const subjects = await TeacherModel.findById(req.teacher._id).populate('teachingSchedule.subjectId');
+
       
 
         res.render('mark-attendence', {
             user: teacher,
              classes: classes,           // Array of unique class names
-            subjects: subjects,         // Array of unique subject objects
+             subjects: subjects.teachingSchedule,       
             sections: sections,         // Array of unique sections
             semesters: semesters, 
             students: null, // No students loaded yet
@@ -55,6 +57,8 @@ router.get("/mark-attendance",TeacherAuth,async(req,res)=>{
             selectedBranch: null,
             selectedSection: null,
             selectedSubject:null,
+            successMessage: req.flash('success'),
+            errorMessages: req.flash('error')   
         });
     } catch (err) {
         console.error('Error rendering mark attendance page:', err);
@@ -66,37 +70,34 @@ router.post("/get-students", TeacherAuth, async (req, res) => {
     try {
         const { class_name, section, semester, subjectId } = req.body;
 
-        console.log({body:req.body})
-
         if (!class_name || !section || !semester || !subjectId) {
             return res.status(400).json({ error: 'All fields are required.' });
         }
 
         // Fetch students based on class, section, semester, and subject
-        const students = await StudentModel.find({
-            class_name: 'cs',
-            section: 'D',
-            semester: 8,
-        }).exec();
+        const classDoc = await ClassModel.findOne({
+            class_name,
+            section,
+            semester,
+        }).populate("students")
+
 
       const selectedSubject = await SubjectModel.findById(subjectId);
-      const x = await TeacherModel.findById(req.teacher._id).populate('teachingSchedule.subjectId').select('teachingSchedule').teachingSchedule
-       const subjects =   req.teacher.teachingSchedule.map(ts => ts.subjectId);
-    //   console.log(subjects);
+      const subjects = await TeacherModel.findById(req.teacher._id).populate('teachingSchedule.subjectId');
       
-   console.log(x)
-
         res.render('mark-attendence', { // Render the same EJS template with students
             user: req.teacher,
             classes: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.class_name))),
-            subjects,
+            subjects:subjects.teachingSchedule,
             sections: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.section))),
             semesters: Array.from(new Set(req.teacher.teachingSchedule.map(ts => ts.semester))),
-            students: students,
+            students: classDoc? classDoc.students : 0 ,
             selectedClass: class_name,
             selectedSemester: semester,
             selectedSection: section,
             selectedSubject, // Fetch the selected subject
+            successMessage: req.flash('success'),
+            errorMessages: req.flash('error')   
         });
     } catch (err) {
         console.error('Error fetching students:', err);
@@ -107,32 +108,37 @@ router.post("/get-students", TeacherAuth, async (req, res) => {
 
 // Handle Attendance Submission
 router.post('/submit-attendance', TeacherAuth, async (req, res) => {
-    const { class: classId, semester, branch,subject, section, attendance } = req.body;
-
+    const {  class_name,  semester, branch,subject, section, attendance } = req.body;
+console.log({class_name, semester, branch,subject, section, attendance})
 
     try {
         // Verify that the selected class is associated with the Teacher
         const teacher = await TeacherModel.findById(req.teacher._id).exec();
+        const classDoc = await ClassModel.findOne({
+            class_name:class_name,
+            section,
+            semester
+        }).populate('students')
         
-        if (!teacher.classes.includes(classId)) {
-            return res.status(403).send('You are not authorized to mark attendance for this class.');
-        }
-
-        // Find the Class document
-        const classDoc = await ClassModel.findById(classId).populate('students').exec();
-
-    
-
         if (!classDoc) {
             return res.status(404).send('Class not found with the provided details.');
         }
+        const teach = teacher.teachingSchedule.filter((t)=>t.classId == classDoc._id);
 
+        console.log("teach : ",teach)
+        if (!teacher) {
+            
+            return res.status(403).send('You are not authorized to mark attendance for this class.');
+        }
+
+    
         // Fetch students enrolled in the class
-        const students = await StudentModel.find({ class: classDoc._id }).exec();
+        // const students = await StudentModel.find({ 
+        //      class_name,
+        //     section,
+        //     semester }).exec();
 
-
-      
-
+        const students = classDoc.students
 
         try {
             for (let student of students) {
@@ -148,9 +154,11 @@ router.post('/submit-attendance', TeacherAuth, async (req, res) => {
                     status: status
                 };
 
+                console.log("cls Id : ",classDoc._id)
+
                 const newAttendance  = await AttendanceModel.create({
                     student: student._id,
-                    class: student.class,
+                    class: classDoc._id,
                     subject: subject,
                     teacher: teacher._id,
                     date: new Date() ,
@@ -259,7 +267,9 @@ router.get('/view-attendance', TeacherAuth, async (req, res) => {
                 selectedSubject: subjectId || '',
                 selectedSemester: semester || '',
                 selectedBranch: branch || '',
-                selectedSection: section || ''
+                selectedSection: section || '',
+                successMessage: req.flash('success'),
+                errorMessages: req.flash('error')   
             });
         } catch (error) {
             console.error('Error fetching attendance records:', error);

@@ -1,19 +1,17 @@
-// controllers/StudentController.js
-
 const csv = require('csv-parser');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 const { StudentModel, validateStudent } = require('../models/Student-model'); 
-const { ClassModel, validateClass } = require('../models/Class-model'); 
+const { ClassModel } = require('../models/Class-model'); 
 const { promisify } = require('util');
-const mongoose = require('mongoose');
 
 // Promisify unlink for async/await
 const unlinkAsync = promisify(fs.unlink);
 
 module.exports.RegisterStudents = async (req, res) => {
     try {
+        // Check if file is uploaded
         if (!req.file) {
             req.flash('error', 'No file uploaded.');
             return res.redirect('/api/students/register');
@@ -25,6 +23,7 @@ module.exports.RegisterStudents = async (req, res) => {
 
         console.log(`Processing file: ${req.file.originalname}, Path: ${filePath}`);
 
+        // Parse file based on extension
         if (ext === '.csv') {
             students = await parseCSV(filePath);
         } else if (ext === '.xlsx' || ext === '.xls') {
@@ -37,7 +36,7 @@ module.exports.RegisterStudents = async (req, res) => {
 
         console.log(`Parsed ${students.length} students from file.`);
 
-        // Validate Each Student
+        // Validate each student
         const validatedStudents = [];
         const invalidEntries = [];
 
@@ -58,7 +57,7 @@ module.exports.RegisterStudents = async (req, res) => {
             return res.redirect('/api/students/register');
         }
 
-        // Prevent Duplicate Inserts by Checking Existing Emails and Enrollment Numbers
+        // Prevent duplicate inserts by checking existing emails and enrollment numbers
         const existingStudents = await StudentModel.find({
             $or: [
                 { email: { $in: validatedStudents.map(s => s.email) } },
@@ -69,6 +68,7 @@ module.exports.RegisterStudents = async (req, res) => {
         const existingEmails = existingStudents.map(s => s.email);
         const existingEnrollmentNumbers = existingStudents.map(s => s.enrollment_number);
 
+        // Filter unique students
         const uniqueStudents = validatedStudents.filter(s => 
             !existingEmails.includes(s.email) && !existingEnrollmentNumbers.includes(s.enrollment_number)
         );
@@ -87,7 +87,7 @@ module.exports.RegisterStudents = async (req, res) => {
             return res.redirect('/api/students/register');
         }
 
-        // Insert Unique Students into MongoDB
+        // Insert unique students into MongoDB
         const insertedStudents = await StudentModel.insertMany(uniqueStudents, { ordered: false });
 
         console.log(`Inserted ${insertedStudents.length} unique students into the database.`);
@@ -161,7 +161,7 @@ module.exports.RegisterStudents = async (req, res) => {
             console.log(`Bulk write result: ${JSON.stringify(bulkWriteResult)}`);
         }
 
-        // Final Flash Message
+        // Final flash message
         if (duplicateEntries.length > 0) {
             req.flash('error', `${insertedStudents.length} students registered successfully.<br>However, the following entries were duplicates and not registered:<br>${duplicateEntries.join('<br>')}`);
         } else {
@@ -176,7 +176,7 @@ module.exports.RegisterStudents = async (req, res) => {
         req.flash('error', 'An error occurred during registration.');
         res.redirect('/api/students/register');
     }
-}
+};
 
 // Helper function to parse CSV
 function parseCSV(filePath) {

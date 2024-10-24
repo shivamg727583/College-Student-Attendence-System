@@ -1,7 +1,8 @@
 <!-- views/mark-attendance.ejs -->
 <%- include('partials/header', { title: 'Mark Attendance', user: user }) %>
-
+<a href="/api/teachers/dashboard" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl">←</a>
 <div class="max-w-4xl mx-auto bg-white p-8 border border-gray-200 rounded shadow">
+   
     <h2 class="text-2xl font-bold mb-6 text-blue-600">Mark Attendance</h2>
 
     <!-- Filters Form -->
@@ -27,9 +28,10 @@
                 <select id="subject" name="subjectId" required
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300">
                     <option value="">Select Subject</option> <!-- Placeholder -->
-                    <% subjects.forEach(subject => { %>
-                        <option value="<%= subject._id %>" <%= selectedSubject && selectedSubject._id.toString() === subject._id.toString() ? 'selected' : '' %>>
-                            <%= subject.subject_name %>
+                    <% subjects.forEach(item => { %>
+                        
+                        <option value="<%= item.subjectId._id %>" <%= selectedSubject && selectedSubject._id.toString() === item.subjectId._id.toString() ? 'selected' : '' %>>
+                            <%= item.subjectId.subject_name %>
                         </option>
                     <% }); %>
                 </select>
@@ -71,10 +73,10 @@
         <!-- Attendance Form -->
         <form action="/api/teachers/submit-attendance" method="POST" class="mt-8">
             <!-- Hidden Fields to Retain Selected Filters -->
-            <input type="hidden" name="class" value="<%= selectedClass %>">
+            <input type="hidden" name="class_name" value="<%= selectedClass %>">
             <input type="hidden" name="semester" value="<%= selectedSemester %>">
             <input type="hidden" name="section" value="<%= selectedSection %>">
-            <input type="hidden" name="subject" value="<%= selectedSubject.subject_name %>"> <!-- Assuming selectedSubject is populated -->
+            <input type="hidden" name="subject" value="<%= selectedSubject._id %>"> <!-- Assuming selectedSubject is populated -->
 
             <table class="min-w-full mt-4 border border-gray-200">
                 <thead>
@@ -91,10 +93,10 @@
                     <% students.forEach((student, index) => { %>
                         <tr>
                             <td class="px-4 py-2 border text-center"><%= index + 1 %></td>
-                            <td class="px-4 py-2 border text-center"><%= student.rollNumber %></td>
+                            <td class="px-4 py-2 border text-center"><%= student.enrollment_number %></td>
                             <td class="px-4 py-2 border"><%= student.name %></td>
                             <td class="px-4 py-2 border text-center">
-                                <input type="checkbox" name="attendance[<%= student._id %>]" value="present" class="form-checkbox h-4 w-4 text-blue-600">
+                                <input type="checkbox" name="attendance" value="<%= student._id  %>" class="form-checkbox h-4 w-4 text-blue-600">
                             </td>
                         </tr>
                     <% }); %>

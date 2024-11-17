@@ -60,13 +60,12 @@ router.get('/manage-attendance', async (req, res) => {
 
         const reports = await AttendanceModel
         .find()
-        .populate('student', 'name roll_no') // Populating student details (name, roll number)
-        .populate('class', 'class_name') // Populating class details (class name)
-        .populate('subject', 'name') // Populating subject details (subject name)
-        .populate('teacher', 'name') // Populating teacher details (teacher name)
+        .populate('student') // Populating student details (name, roll number)
+        .populate('class') // Populating class details (class name)
+        .populate('subject') // Populating subject details (subject name)
+        .populate('teacher') // Populating teacher details (teacher name)
         .sort({ date: -1 }) // Sorting by the latest date first
         .limit(100); // Limit to recent 100 entries
-
 
         // Render the attendance report page
         res.render('attendance-report', {
@@ -86,6 +85,8 @@ router.post('/attendance-report', async (req, res) => {
     try {
         const { classFilter, teacherFilter, dateFilter, subjectFilter } = req.body;
 
+        console.log("body:",req.body)
+
         // Build the query dynamically based on filters
         let query = {};
 
@@ -95,7 +96,14 @@ router.post('/attendance-report', async (req, res) => {
         if (subjectFilter) query.subject = subjectFilter;
 
         // Fetch filtered attendance records
-        const reports = await AttendanceModel.find(query).sort({ date: -1 });
+        const reports = await AttendanceModel.find(query)
+        .populate('student') // Populating student details (name, roll number)
+        .populate('class') // Populating class details (class name)
+        .populate('subject') // Populating subject details (subject name)
+        .populate('teacher') // Populating teacher details (teacher name)
+        .sort({ date: -1 });
+
+        console.log('report ',reports)
 
         // Fetch classes, teachers, subjects for the filters again
         const classes = await ClassModel.find();

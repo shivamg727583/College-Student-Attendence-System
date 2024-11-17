@@ -1,16 +1,12 @@
-import React from 'react'
-import Login from './Pages/Login'
-import AdminDashboard from './Components/Admin/Dashboard'
-import TeacherDashboard from './Components/Teacher/Dashboard'
+import React from 'react';
+import AppRouter from './Components/Routing/AppRouter';
 
 function App() {
   return (
     <div>
-      <Login />
-      <AdminDashboard />
-      <TeacherDashboard />
+      <AppRouter />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

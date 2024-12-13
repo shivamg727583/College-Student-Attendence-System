@@ -109,7 +109,7 @@ router.post("/get-students", TeacherAuth, async (req, res) => {
 // Handle Attendance Submission
 router.post('/submit-attendance', TeacherAuth, async (req, res) => {
     const {  class_name,  semester, branch,subject, section, attendance } = req.body;
-console.log({class_name, semester, branch,subject, section, attendance})
+// console.log({class_name, semester, branch,subject, section, attendance})
 
     try {
         // Verify that the selected class is associated with the Teacher
@@ -154,7 +154,7 @@ console.log({class_name, semester, branch,subject, section, attendance})
                     status: status
                 };
 
-                console.log("cls Id : ",classDoc._id)
+                // console.log("cls Id : ",classDoc._id)
 
                 const newAttendance  = await AttendanceModel.create({
                     student: student._id,
@@ -166,7 +166,7 @@ console.log({class_name, semester, branch,subject, section, attendance})
         
                 })
 
-                console.log(newAttendance)
+                // console.log(newAttendance)
          
                 student.attendance.push(attendanceRecord);
                 await student.save();
@@ -189,6 +189,7 @@ req.flash('success',"Attendence submitted")
 router.get('/view-attendance', TeacherAuth, async (req, res) => {
         try {
             const { classId, subjectId, semester, branch, section } = req.query;
+
     
             // Fetch filter data
             const classes = await ClassModel.find({ /* your criteria */ }).exec();

@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router();
+const mongoose = require('mongoose')
 const { TeacherModel, validateTeacher } = require("../models/Teacher-model");
 const { SubjectModel } = require("../models/Subject-model");
 const { ClassModel } = require("../models/Class-model");
@@ -67,12 +68,14 @@ router.get('/manage-attendance', async (req, res) => {
         .sort({ date: -1 }) // Sorting by the latest date first
         .limit(100); // Limit to recent 100 entries
 
+        const semesters = await ClassModel.distinct('semester');
         // Render the attendance report page
         res.render('attendance-report', {
             classes,
             teachers,
             subjects,
-            reports
+            reports,
+            semesters,
         });
     } catch (error) {
         console.error('Error fetching attendance report:', error);
@@ -81,47 +84,83 @@ router.get('/manage-attendance', async (req, res) => {
 });
 
 // POST route to filter attendance report
+
 router.post('/attendance-report', async (req, res) => {
     try {
-        const { classFilter, teacherFilter, dateFilter, subjectFilter } = req.body;
+        const {
+            semesterFilter,
+            branchFilter,
+            sectionFilter,
+            teacherFilter,
+            dateFilter,
+            subjectFilter
+        } = req.body;
 
-        console.log("body:",req.body)
+        console.log("Request body:", req.body);
 
-        // Build the query dynamically based on filters
+        // Build the query dynamically
         let query = {};
 
-        if (classFilter) query.class_name = classFilter;
-        if (teacherFilter) query.teacher_name = teacherFilter;
-        if (dateFilter) query.date = { $gte: new Date(dateFilter), $lt: new Date(new Date(dateFilter).setDate(new Date(dateFilter).getDate() + 1)) };
-        if (subjectFilter) query.subject = subjectFilter;
+        // Class Filters
+        if (semesterFilter) query['class.semester'] = semesterFilter;
+        if (branchFilter) query['class.class_name'] = branchFilter;
+        if (sectionFilter) query['class.section'] = sectionFilter;
+
+        // Teacher and Subject Filters
+        if (teacherFilter && mongoose.Types.ObjectId.isValid(teacherFilter)) {
+            query.teacher =new mongoose.Types.ObjectId(teacherFilter);
+        }
+        if (subjectFilter && mongoose.Types.ObjectId.isValid(subjectFilter)) {
+            query.subject =new mongoose.Types.ObjectId(subjectFilter);
+        }
+
+        // Date Filter
+        if (dateFilter) {
+            const startDate = new Date(dateFilter);
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1); // Increment by 1 day for range filtering
+            query.date = { $gte: startDate, $lt: endDate };
+        }
+
+        console.log("Generated query:", query);
 
         // Fetch filtered attendance records
         const reports = await AttendanceModel.find(query)
-        .populate('student') // Populating student details (name, roll number)
-        .populate('class') // Populating class details (class name)
-        .populate('subject') // Populating subject details (subject name)
-        .populate('teacher') // Populating teacher details (teacher name)
-        .sort({ date: -1 });
+            .populate('student', 'name enrollment_number') // Fetch student details with name and roll number
+            .populate('class', 'semester class_name section') // Fetch class details with specific fields
+            .populate('subject', 'subject_name subject_code') // Fetch subject details
+            .populate('teacher', 'name') // Fetch teacher name
+            .sort({ date: -1 });
 
-        console.log('report ',reports)
+        console.log("Attendance reports:", reports);
 
-        // Fetch classes, teachers, subjects for the filters again
-        const classes = await ClassModel.find();
-        const teachers = await TeacherModel.find();
-        const subjects = await SubjectModel.find();
+        // Fetch unique values for dropdowns (filters)
+        const semesters = await ClassModel.distinct('semester');
+        const branches = await ClassModel.distinct('branch');
+        const sections = await ClassModel.distinct('section');
+        const teachers = await TeacherModel.find({}, '_id name'); // Fetch all teachers with their IDs and names
+        const subjects = await SubjectModel.find({}, '_id subject_name subject_code'); // Fetch all subjects
 
-        // Render the attendance report with filtered data
+
+      
+
+        // Render the attendance report with the filtered data
         res.render('attendance-report', {
-            classes,
+            semesters,
+            branches,
+            sections,
             teachers,
             subjects,
-            reports
+            reports,
         });
     } catch (error) {
-        console.error('Error filtering attendance report:', error);
-        res.status(500).send('Server error');
+        console.error("Error in filtering attendance report:", error);
+        res.status(500).json({ error: "Server error occurred while fetching attendance reports." });
     }
 });
+
+
+
 
 
 

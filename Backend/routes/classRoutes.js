@@ -304,6 +304,29 @@ router.post('/update-class/:id', async (req, res) => {
 });
 
 
+router.get('/', async (req, res) => {
+    try {
+        const { semester, branch } = req.query; // Extract filters from query parameters
+
+        // Build the query for fetching classes
+        let query = {};
+        if (semester) query.semester = semester;
+        if (branch) query.class_name = branch;
+
+        // Fetch distinct branches or sections based on filters
+        const branches = !branch ? await ClassModel.distinct('class_name', query) : null;
+        const sections = branch ? await ClassModel.distinct('section', query) : null;
+
+        res.json({
+            branches: branches || [],
+            sections: sections || []
+        });
+    } catch (error) {
+        console.error("Error fetching classes data:", error);
+        res.status(500).json({ error: "Server error occurred while fetching classes data." });
+    }
+});
+
 
 
 

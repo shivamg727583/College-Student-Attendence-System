@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 function Sidenav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,9 +15,9 @@ function Sidenav() {
       {/* Hamburger Icon for Mobile */}
       <button
         onClick={toggleMenu}
-        className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-blue-500 text-white rounded focus:outline-none"
+        className="lg:hidden fixed top-20  right-2 z-20 p-2 bg-blue-100 text-white rounded focus:outline-none"
       >
-        <i className="ri-menu-line text-2xl"></i>
+       {isOpen ? <FaTimes /> : <FaBars />}
       </button>
 
       {/* Sidebar Menu */}
@@ -30,8 +31,8 @@ function Sidenav() {
           <NavLink
             to="/admin"
             className={({ isActive }) =>
-              `text-lg font-medium flex gap-2 items-center w-full px-10 py-4 rounded-xl transition duration-300 ${
-                isActive ? 'bg-white text-blue-500 rounded-r-none' : 'hover:bg-blue-500 hover:text-white hover:rounded-r-none'
+              `text-lg font-medium flex gap-2 items-center w-full px-10 py-4 rounded-xl transition duration-300 
+                  hover:bg-blue-500 hover:text-white hover:rounded-r-none'
               }`
             }
           >

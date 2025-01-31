@@ -13,10 +13,6 @@ function TeacherDashboard() {
         <div className='md:w-[80%]  w-full h-full p-10'>
           <Routes>
          <Route path='/' element={<Dashboard />} />
-
-
-          
-
             {/* Add more routes as needed */}
           </Routes>
         </div>

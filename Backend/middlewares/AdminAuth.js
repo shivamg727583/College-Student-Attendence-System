@@ -1,33 +1,27 @@
-const jwt = require('jsonwebtoken');
-const { AdminModel } = require('../models/Admin-model');
+const jwt = require("jsonwebtoken");
+const { AdminModel } = require("../models/Admin-model");
 
 async function auth(req, res, next) {
-    const token = req.cookies.Admintoken;
+    // Get token from headers instead of cookies
+    const token = req.header("Authorization")?.replace("Bearer ", ""); 
 
     if (!token) {
-        req.flash("error","Access denied. No token provided.")
-        return res.status(401).redirect('/api/admin/login')
-
-    };
+        console.log("Token not found");
+        return res.status(401).json({ error: "Unauthorized: No token provided" }); // ❌ No Redirect
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const admin = await AdminModel.findById(decoded.id).select("-password");
 
-        const admin = await AdminModel.findById(decoded.id).select('-password');
-       
-        if (!admin){
-            req.flash('error',"Invalid token.")
-            return res.status(401).redirect('/api/admin/login')
-        };
+        if (!admin) {
+            return res.status(401).json({ error: "Unauthorized: Invalid token" });
+        }
 
-        // Attach the admin information to the request object
-        req.admin = admin; // Change to admin object instead of decoded payload
-
-        next(); // Proceed to the next middleware or route handler
+        req.admin = admin;
+        next(); // Proceed to next middleware
     } catch (ex) {
-        req.flash('error',"Invalid token.")
-        res.status(401).redirect('/api/admin/login');
-        // res.status(400).send('Invalid token.');
+        return res.status(401).json({ error: "Unauthorized: Invalid token" });
     }
 }
 

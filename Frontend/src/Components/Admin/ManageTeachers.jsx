@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
+import {useDispatch ,useSelector} from 'react-redux'
+import { fetchTeachers } from '../../redux/TeacherSlice';
 function ManageTeachers() {
-  const [teachers, setTeachers] = useState([
-    { id: 1, name: 'John Doe', subject: 'Mathematics', email: 'john.doe@example.com' },
-    { id: 2, name: 'Jane Smith', subject: 'English', email: 'jane.smith@example.com' },
-    { id: 3, name: 'Michael Brown', subject: 'Physics', email: 'michael.brown@example.com' },
-  ]);
+const dispatch = useDispatch();
+const {teachers} = useSelector((state)=>state.teacher); 
+
+console.log(teachers)
+
+  useEffect(()=>{
+  dispatch(fetchTeachers())
+
+  },[dispatch])
+
+ 
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = (event) => {
@@ -46,10 +53,10 @@ function ManageTeachers() {
         <tbody>
           {filteredTeachers.length > 0 ? (
             filteredTeachers.map((teacher) => (
-              <tr key={teacher.id} className="hover:bg-gray-50">
-                <td className="p-4 border-b">{teacher.id}</td>
+              <tr key={teacher._id} className="hover:bg-gray-50">
+                <td className="p-4 border-b">{teacher._id}</td>
                 <td className="p-4 border-b">{teacher.name}</td>
-                <td className="p-4 border-b">{teacher.subject}</td>
+                <td className="p-4 border-b">{teacher.subjects}</td>
                 <td className="p-4 border-b">{teacher.email}</td>
                 <td className="p-4 border-b">
                   <Link to='/admin/teacher/edit' className="text-blue-600 hover:text-blue-800 mr-2">

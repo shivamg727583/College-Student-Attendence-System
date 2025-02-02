@@ -6,7 +6,7 @@ function Sidenav() {
     <div className="w-[20%]  h-full shadow-lg rounded bg-gray-100 p-4 pr-0">
       <h1 className="font-bold text-2xl mt-4">Teacher Dashboard</h1>
       <ul className="w-full flex flex-col gap-3 mt-6">
-        <NavLink  to='/teacher/' className={({ isActive }) =>
+        <NavLink  to='/teacher/dashboard' className={({ isActive }) =>
           `text-lg font-medium flex gap-2 items-center w-full px-10 py-4 rounded-xl transition duration-300 ${
             isActive ? 'bg-white text-blue-500 rounded-r-none' : 'hover:bg-blue-500 hover:text-white hover:rounded-r-none'
           }`

@@ -19,7 +19,8 @@ function App() {
           theme="light" // Change to "dark" if needed
         />
         <Navbar />
-      <AppRouter />
+        
+      <AppRouter  />
     </div>
   );
 }

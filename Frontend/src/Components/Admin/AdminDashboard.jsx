@@ -26,14 +26,14 @@ function AdminDashboard() {
         {/* Main content area - Takes the remaining width and is scrollable */}
         <div className="md:w-[80%] w-full h-full overflow-auto p-4 md:p-10 bg-gray-50 mt-20">
           <Routes>
-            <Route path="" element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="manage-teachers" element={<ManageTeachers />} />
             <Route path="manage-students" element={<ManageStudents />} />
             <Route path="manage-classes" element={<ManageClasses />} />
             <Route path="manage-timetable" element={<ManageTimetable />} />
             <Route path="manage-attendence" element={<ManageAttendance />} />
             <Route path='teacher/register' element={<TeacherRegistration />} />
-            <Route path='teacher/edit' element={<EditTeacher />} />
+            <Route path='teacher/edit/:id' element={<EditTeacher />} />
 
 
             {/* Add more routes as needed */}

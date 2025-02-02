@@ -71,6 +71,18 @@ router.get("/manage-teachers", auth, async (req, res) => {
   }
 });
 
+
+// Fetch a techer by id
+router.get('/fetch-teacher/:id',auth,async(req,res)=>{
+  try{
+    const teacher = await TeacherModel.findById(req.params.id).populate('teachingSchedule.subjectId');
+    if(!teacher) return res.status(404).json({message:"Teacher not found"});
+    res.status(200).json(teacher);
+  }catch(error){
+    res.status(500).json({message:"Failed to fetch teacher",error:error.message});
+  }
+
+})
 // 🟢 Delete a teacher (Admin Protected)
 router.delete("/delete/:id", auth, async (req, res) => {
   try {
@@ -84,6 +96,61 @@ router.delete("/delete/:id", auth, async (req, res) => {
     res.status(500).json({ message: "Failed to delete teacher", error: error.message });
   }
 });
+
+// 🟢 Admin can edit a teacher's details
+router.put("/edit-teacher/:id", auth, async (req, res) => {
+  try {
+    const teacherId = req.params.id;
+    const updates = req.body;
+    
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+    console.log("updates",updates)
+    
+    const updatedTeacher = await TeacherModel.findByIdAndUpdate(
+      teacherId,
+      updates,
+      { new: true }
+    );
+    
+    if (!updatedTeacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+    console.log("updatedTeacher",updatedTeacher)
+    res.status(200).json({ message: "Teacher updated successfully", updatedTeacher });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Failed to update teacher", error: error.message });
+  }
+});
+
+// 🟢 Teacher can update their own profile
+router.put("/edit-profile", TeacherAuth, async (req, res) => {
+  try {
+    const teacherId = req.teacher._id;
+    const updates = req.body;
+    
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+    
+    const updatedTeacher = await TeacherModel.findByIdAndUpdate(
+      teacherId,
+      updates,
+      { new: true }
+    );
+    
+    if (!updatedTeacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+    
+    res.status(200).json({ message: "Profile updated successfully", updatedTeacher });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update profile", error: error.message });
+  }
+});
+
 
 // 🟢 Teacher Login
 router.post("/login", async (req, res) => {

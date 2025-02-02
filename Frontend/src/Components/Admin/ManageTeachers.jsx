@@ -1,29 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {useDispatch ,useSelector} from 'react-redux'
-import { fetchTeachers } from '../../redux/TeacherSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { deleteTeacher, fetchTeachers } from '../../redux/TeacherSlice';
+
 function ManageTeachers() {
-const dispatch = useDispatch();
-const {teachers} = useSelector((state)=>state.teacher); 
-
-console.log(teachers)
-
-  useEffect(()=>{
-  dispatch(fetchTeachers())
-
-  },[dispatch])
-
- 
+  const dispatch = useDispatch();
+  const { teachers } = useSelector((state) => state.teacher);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    dispatch(fetchTeachers());
+  }, [dispatch]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTeachers = teachers.filter((teacher) => {
+    const nameMatch = teacher.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const subjectMatch = teacher.subject?.toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || subjectMatch;
+  });
+
+  const TeacherDeleteHandler = (teacherId) => {
+    dispatch(deleteTeacher(teacherId));
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -56,15 +57,15 @@ console.log(teachers)
               <tr key={teacher._id} className="hover:bg-gray-50">
                 <td className="p-4 border-b">{teacher._id}</td>
                 <td className="p-4 border-b">{teacher.name}</td>
-                <td className="p-4 border-b">{teacher.subjects}</td>
+                <td className="p-4 border-b">{teacher.subject || 'N/A'}</td>
                 <td className="p-4 border-b">{teacher.email}</td>
                 <td className="p-4 border-b">
-                  <Link to='/admin/teacher/edit' className="text-blue-600 hover:text-blue-800 mr-2">
+                  <Link to={`/admin/teacher/edit/${teacher._id}`} className="text-blue-600 hover:text-blue-800 mr-2">
                     <i className="ri-edit-2-line"></i> Edit
                   </Link>
-                  <Link className="text-red-600 hover:text-red-800">
+                  <button onClick={() => TeacherDeleteHandler(teacher._id)} className="text-red-600 hover:text-red-800">
                     <i className="ri-delete-bin-6-line"></i> Delete
-                  </Link>
+                  </button>
                 </td>
               </tr>
             ))

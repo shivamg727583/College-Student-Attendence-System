@@ -29,10 +29,10 @@ function Sidenav() {
         <h1 className="font-bold text-2xl mt-4">Admin Dashboard</h1>
         <ul className="w-full flex flex-col gap-3 mt-6">
           <NavLink
-            to="/admin"
+            to="/admin/dashboard"
             className={({ isActive }) =>
-              `text-lg font-medium flex gap-2 items-center w-full px-10 py-4 rounded-xl transition duration-300 
-                  hover:bg-blue-500 hover:text-white hover:rounded-r-none'
+          `text-lg font-medium flex gap-2 items-center w-full px-10 py-4 rounded-xl transition duration-300 ${
+            isActive ? 'bg-white text-blue-500 rounded-r-none' : 'hover:bg-blue-500 hover:text-white hover:rounded-r-none'
               }`
             }
           >

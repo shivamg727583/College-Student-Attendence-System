@@ -9,16 +9,10 @@ const TeacherRegistration = () => {
   const { classes,  subjects } = useSelector((state) => state.admin);
 
   // Extract unique sections and semesters
-  const sections = [...new Set(classes.map((cls) => cls.section))];
-  const semesters = [...new Set(classes.map((cls) => cls.semester))];
-  const classNames = [...new Set(classes.map((cls) => cls.class_name))];
+  const sections = [...new Set(classes.map((cls) => cls.section))].sort();
+  const semesters = [...new Set(classes.map((cls) => cls.semester))].sort();
+  const classNames = [...new Set(classes.map((cls) => cls.class_name))].sort();
 
-
-  console.log({
-    "sections":sections,
-    "sem ":semesters,
-    "name":classNames
-  })
 
   const {
     register,

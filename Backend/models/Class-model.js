@@ -3,19 +3,19 @@ const Joi = require('joi');
 
 const Schema = mongoose.Schema;
 
-// Class Subject Schema
+// Class Subject Schema (Subjects assigned to classes along with teachers)
 const ClassSubjectSchema = new Schema({
     subject: {
         type: Schema.Types.ObjectId,
-        ref: 'Subject',
+        ref: 'Subject', // Correctly references the Subject model
         required: [true, 'Subject reference is required']
     },
     teacher: {
         type: Schema.Types.ObjectId,
-        ref: 'Teacher',
-        required: false // Make teacher optional
+        ref: 'Teacher', // Correctly references the Teacher model
+        required: false // Optional teacher field
     }
-}, { _id: false }); // Prevent creation of _id for subdocuments
+}, { _id: false }); // Prevents auto-creation of _id for subdocuments
 
 // Class Schema
 const ClassSchema = new Schema({
@@ -29,19 +29,23 @@ const ClassSchema = new Schema({
         required: [true, 'Section is required'],
         trim: true
     },
-
     semester: {
         type: String,
         required: [true, 'Semester is required'],
         trim: true,
     },
-    subjects: [ClassSubjectSchema], // List of subjects and their respective teachers
+    subjects: [ClassSubjectSchema], // Embedded subjects (with assigned teachers)
     students: [{
         type: Schema.Types.ObjectId,
         ref: 'Student'
     }]
 }, { 
     timestamps: true 
+});
+
+// 🟢 Fix for Population Error: Ensure subjects -> teacher gets populated properly
+ClassSchema.pre('find', function () {
+    this.populate('subjects.subject').populate('subjects.teacher').populate('students');
 });
 
 // Validation for ObjectId

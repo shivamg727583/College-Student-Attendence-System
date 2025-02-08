@@ -6,265 +6,170 @@ const { ClassModel, validateClass } = require('../models/Class-model');
 const { SubjectModel } = require('../models/Subject-model');
 const { TeacherModel } = require('../models/Teacher-model');
 const { StudentModel } = require('../models/Student-model');
-const { AttendanceModel } = require('../models/Attendence-model');
 
-// Admin controller part for creating a class
-router.get('/create-class', auth, async (req, res) => {
+// 🟢 GET ALL CLASSES (For Frontend Display)
+router.get('/', auth, async (req, res) => {
     try {
-        const subjects = await SubjectModel.find().select('_id subject_name subject_code');
-        const teachers = await TeacherModel.find().select('_id name');
-        const students = await StudentModel.find().select('_id name');
-        
-        res.render('create-class', { 
-            formData: {},
-            errors: {},
-            subjects,
-            teachers,
-            students,
-            successMessage: req.flash('success'),
-            errorMessages: req.flash('error')
-        });
+        const classes = await ClassModel.find()
+            .populate('subjects.subject', 'subject_name subject_code')
+            .populate('subjects.teacher', 'name')
+            .populate('students', 'name');
+
+        res.status(200).json({ success: true, classes });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error('Error fetching classes:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
-// POST /classes - Handle form submission to create a new class
-router.post('/create-class', async (req, res) => {
-    const { class_name, section, semester, subjects, students } = req.body;
-    let classData = {
-        class_name,
-        section,
-        semester,
-        subjects: Array.isArray(subjects) ? subjects : [subjects],
-        students: students ? students.split(',').map(id => id.trim()) : []
-    };
 
-    // Validate data using Joi
-    const { error } = validateClass(classData);
-    if (error) {
-        const errors = {};
-        error.details.forEach(err => {
-            const path = err.path;
-            if (path[0] === 'subjects') {
-                const index = path[1];
-                const field = path[2];
-                if (!errors.subjects) errors.subjects = [];
-                if (!errors.subjects[index]) errors.subjects[index] = {};
-                errors.subjects[index][field] = { message: err.message };
-            } else {
-                errors[path[0]] = { message: err.message };
-            }
-        });
-
-        // Re-render the form with errors
-        return res.status(400).render('create-class', {
-            formData: classData,
-            errors,
-            subjects: await SubjectModel.find().select('_id name'),
-            teachers: await TeacherModel.find().select('_id name'),
-            students: await StudentModel.find().select('_id name')
-        });
-    }
-
+// 🟢 CREATE NEW CLASS
+router.post('/create', auth, async (req, res) => {
     try {
-        const newClass = new ClassModel(classData);
+        let { class_name, section, semester, subjects, students } = req.body;
+
+        // Ensure subjects is an array
+        subjects = Array.isArray(subjects) ? subjects : [subjects];
+        students = students ? students.split(',').map(id => id.trim()) : []; // Ensure students is an array of IDs
+
+        const classData = { class_name, section, semester, subjects, students };
+
+        // Validate input data
+        const { error } = validateClass(classData);
+        if (error) return res.status(400).json({ success: false, errors: error.details });
+
+        // Process subjects to ensure teacher IDs are valid ObjectIds
+        const processedSubjects = subjects.map(subj => {
+            if (subj.teacher && mongoose.Types.ObjectId.isValid(subj.teacher)) {
+                // Corrected to use 'new' keyword when creating ObjectId
+                subj.teacher = new mongoose.Types.ObjectId(subj.teacher); // Ensure teacher ID is an ObjectId
+            } else {
+                subj.teacher = null; // Ensure no invalid teacher ID is assigned
+            }
+            return subj;
+        });
+
+        // Create new class
+        const newClass = new ClassModel({ ...classData, subjects: processedSubjects });
         const savedClass = await newClass.save();
 
-        const teacherIds = classData.subjects
+        // Add class ID to teachers' records (if assigned)
+        const teacherIds = processedSubjects
             .filter(subj => subj.teacher)
-            .map(subj => mongoose.Types.ObjectId(subj.teacher));
+            .map(subj => subj.teacher); // Get unique teacher IDs (already validated ObjectIds)
 
-        const uniqueTeacherIds = [...new Set(teacherIds.map(id => id.toString()))];
+        const uniqueTeacherIds = [...new Set(teacherIds)]; // Ensure teachers are added only once
 
         await TeacherModel.updateMany(
             { _id: { $in: uniqueTeacherIds } },
-            { $addToSet: { classes: savedClass._id } }
+            { $addToSet: { classes: savedClass._id } } // Add class ID to teachers' records
         );
 
-        req.flash("success", "Class created successfully");
-        res.redirect('/api/class/create-class');
-    } catch (err) {
-        console.error(err);
-        req.flash('error', "Class creation failed");
-        res.status(500).send('Server Error');
+        res.status(201).json({ success: true, message: 'Class created successfully', class: savedClass });
+    } catch (error) {
+        console.error('Error creating class:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
-// DELETE /classes/:id - Handle class deletion
-router.get('/delete/:id', auth, async (req, res) => {
+
+
+// 🟢 DELETE A CLASS
+router.delete('/delete/:id', auth, async (req, res) => {
     const classId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(classId)) {
-        req.flash("error", "Invalid Class ID.");
-        return res.redirect('/api/admin/manage-classes');
+        return res.status(400).json({ success: false, message: 'Invalid Class ID' });
     }
 
     try {
         const deletedClass = await ClassModel.findByIdAndDelete(classId);
         if (!deletedClass) {
-            req.flash("error", "Class not found.");
-            return res.redirect('/api/admin/manage-classes');
+            return res.status(404).json({ success: false, message: 'Class not found' });
         }
 
-        // Remove the class from all teachers' "classes" array
-        await TeacherModel.updateMany(
-            { classes: classId },
-            { $pull: { classes: classId } }
-        );
+        // Remove class from teachers and students
+        await TeacherModel.updateMany({ classes: classId }, { $pull: { classes: classId } });
+        await StudentModel.updateMany({ class: classId }, { $set: { class: null } });
 
-        // Remove the class from all students' "class" field by setting it to null
-        await StudentModel.updateMany(
-            { class: classId },
-            { $set: { class: null } }
-        );
-
-        req.flash("success", "Class deleted successfully.");
-        res.redirect('/api/admin/manage-classes');
-    } catch (err) {
-        console.error('Error deleting class:', err);
-        req.flash("error", "An error occurred while deleting the class.");
-        res.redirect('/api/admin/manage-classes');
+        res.status(200).json({ success: true, message: 'Class deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting class:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
-// GET /classes/:id - Handle fetching the class details for updating
-router.get('/update-class/:id', auth, async (req, res) => {
+// 🟢 GET CLASS DETAILS (For Editing)
+router.get('/:id', auth, async (req, res) => {
     const classId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return res.status(400).send('Invalid Class ID');
+        return res.status(400).json({ success: false, message: 'Invalid Class ID' });
     }
 
     try {
         const classData = await ClassModel.findById(classId)
-            .populate('subjects.subject')
-            .populate('subjects.teacher')
-            .populate('students');
+            .populate('subjects.subject', 'subject_name subject_code')
+            .populate('subjects.teacher', 'name')
+            .populate('students', 'name');
 
         if (!classData) {
-            return res.status(404).send('Class not found');
+            return res.status(404).json({ success: false, message: 'Class not found' });
         }
 
-        const subjectsList = await SubjectModel.find().select('_id subject_name subject_code');
-        const teachersList = await TeacherModel.find().select('_id name');
-
-        res.render('update-class', { 
-            classData, 
-            subjectsList, 
-            teachersList, 
-            errors: {} 
-        });
+        res.status(200).json({ success: true, class: classData });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
+        console.error('Error fetching class details:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 
-// POST /classes/update/:id - Handle class update
-router.post('/update-class/:id', async (req, res) => {
+// 🟢 UPDATE A CLASS
+router.put('/update/:id', auth, async (req, res) => {
     const classId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(classId)) {
-        return res.status(400).send('Invalid Class ID');
+        return res.status(400).json({ success: false, message: 'Invalid Class ID' });
     }
 
-    const { class_name, section, semester, subjects, students } = req.body;
-    let classData = {
-        class_name,
-        section,
-        semester,
-        subjects: Array.isArray(subjects) ? subjects : [subjects],
-        students: students ? students.split(',').map(id => id.trim()) : []
-    };
-
-    const { error } = validateClass(classData);
-    if (error) {
-        const errors = {};
-        error.details.forEach(err => {
-            const path = err.path;
-            if (path[0] === 'subjects') {
-                const index = path[1];
-                const field = path[2];
-                if (!errors.subjects) errors.subjects = [];
-                if (!errors.subjects[index]) errors.subjects[index] = {};
-                errors.subjects[index][field] = { message: err.message };
-            } else {
-                errors[path[0]] = { message: err.message };
-            }
-        });
-
-        const subjectsList = await SubjectModel.find().select('_id subject_name subject_code');
-        const teachersList = await TeacherModel.find().select('_id name');
-
-        res.status(400).render('update-class', {
-            classData: { _id: classId, ...classData },
-            subjectsList,
-            teachersList,
-            errors
-        });
-    } else {
-        try {
-            const existingClass = await ClassModel.findById(classId);
-            if (!existingClass) {
-                return res.status(404).send('Class not found');
-            }
-
-            const previousTeacherIds = existingClass.subjects
-                .filter(subj => subj.teacher)
-                .map(subj => subj.teacher.toString());
-
-            const newTeacherIds = classData.subjects
-                .filter(subj => subj.teacher)
-                .map(subj => subj.teacher.toString());
-
-            const teachersToAdd = newTeacherIds.filter(id => !previousTeacherIds.includes(id));
-            const teachersToRemove = previousTeacherIds.filter(id => !newTeacherIds.includes(id));
-
-            await ClassModel.findByIdAndUpdate(classId, classData, { new: true, runValidators: true });
-
-            if (teachersToAdd.length > 0) {
-                await TeacherModel.updateMany(
-                    { _id: { $in: teachersToAdd } },
-                    { $addToSet: { classes: classId } }
-                );
-            }
-
-            if (teachersToRemove.length > 0) {
-                await TeacherModel.updateMany(
-                    { _id: { $in: teachersToRemove } },
-                    { $pull: { classes: classId } }
-                );
-            }
-
-            req.flash("success", "Class updated successfully");
-            res.redirect('/api/admin/manage-classes');
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Server Error');
-        }
-    }
-});
-
-// GET /api/admin - Fetch class data (for dropdown filters)
-router.get('/', async (req, res) => {
     try {
-        const { semester, branch } = req.query;
-        let query = {};
-        if (semester) query.semester = semester;
-        if (branch) query.class_name = branch;
+        let { class_name, section, semester, subjects, students } = req.body;
 
-        const branches = !branch ? await ClassModel.distinct('class_name', query) : null;
-        const sections = branch ? await ClassModel.distinct('section', query) : null;
+        subjects = Array.isArray(subjects) ? subjects : [subjects];
+        students = students ? students.split(',').map(id => id.trim()) : [];
 
-        res.json({
-            branches: branches || [],
-            sections: sections || []
-        });
+        const classData = { class_name, section, semester, subjects, students };
+
+        const { error } = validateClass(classData);
+        if (error) return res.status(400).json({ success: false, errors: error.details });
+
+        const existingClass = await ClassModel.findById(classId);
+        if (!existingClass) {
+            return res.status(404).json({ success: false, message: 'Class not found' });
+        }
+
+        // Get previous teacher IDs and new teacher IDs
+        const previousTeacherIds = existingClass.subjects.map(subj => subj.teacher?.toString());
+        const newTeacherIds = subjects.map(subj => subj.teacher?.toString());
+
+        const teachersToAdd = newTeacherIds.filter(id => id && !previousTeacherIds.includes(id));
+        const teachersToRemove = previousTeacherIds.filter(id => id && !newTeacherIds.includes(id));
+
+        // Update class
+        const updatedClass = await ClassModel.findByIdAndUpdate(classId, classData, { new: true, runValidators: true });
+
+        // Update teachers' classes
+        if (teachersToAdd.length > 0) {
+            await TeacherModel.updateMany({ _id: { $in: teachersToAdd } }, { $addToSet: { classes: classId } });
+        }
+        if (teachersToRemove.length > 0) {
+            await TeacherModel.updateMany({ _id: { $in: teachersToRemove } }, { $pull: { classes: classId } });
+        }
+
+        res.status(200).json({ success: true, message: 'Class updated successfully', class: updatedClass });
     } catch (error) {
-        console.error("Error fetching classes data:", error);
-        res.status(500).json({ error: "Server error occurred while fetching classes data." });
+        console.error('Error updating class:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
 

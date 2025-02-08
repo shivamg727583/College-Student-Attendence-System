@@ -3,7 +3,7 @@ import authReducer from './authSlice';
 import attendanceReducer from './attendanceSlice';
 import adminReducer from './adminSlice';
 import teacherReducer from './TeacherSlice';
-import classReducer from './classSlice'
+import classReducer from './Slices/classSlice'
 
 const store = configureStore({
   reducer: {

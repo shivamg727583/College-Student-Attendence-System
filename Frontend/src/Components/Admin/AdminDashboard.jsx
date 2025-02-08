@@ -9,6 +9,8 @@ import ManageAttendance from './ManageAttendence';
 import Dashboard from './Dashboard';
 import TeacherRegistration from './Teacher/TeacherRegister';
 import EditTeacher from './Teacher/EditTeacher';
+import CreateClass from './Class/CreateClass';
+import EditClass from './Class/EditClass';
 
 
 function AdminDashboard() {
@@ -34,7 +36,8 @@ function AdminDashboard() {
             <Route path="manage-attendence" element={<ManageAttendance />} />
             <Route path='teacher/register' element={<TeacherRegistration />} />
             <Route path='teacher/edit/:id' element={<EditTeacher />} />
-
+            <Route path='class/register' element={<CreateClass />} />
+            <Route path='class/edit/:id' element={<EditClass />} />
 
             {/* Add more routes as needed */}
           </Routes>

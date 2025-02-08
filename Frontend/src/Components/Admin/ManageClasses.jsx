@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchClasses, updateClass } from '../../redux/Slices/classSlice';
+import { deleteClass, fetchClasses, updateClass } from '../../redux/Slices/classSlice';
 import LoaderSpinner from '../Others/Loading';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -44,6 +44,9 @@ function ManageClasses() {
   }, [dispatch]);
 
 
+  const deleteClassHanlder =(id)=>{
+    dispatch(deleteClass(id));
+  }
   
 
   return (
@@ -116,7 +119,7 @@ function ManageClasses() {
                    <Link to={`/admin/class/edit/${cls._id}`} className="text-blue-600 hover:text-blue-800 mr-2">
                                       <i className="ri-edit-2-line"></i> Edit
                                     </Link>
-                  <button className="text-red-600 hover:text-red-800">
+                  <button onClick={()=>deleteClassHanlder(cls._id)} className="text-red-600 hover:text-red-800">
                     <i className="ri-delete-bin-6-line"></i> Delete
                   </button>
                 </td>

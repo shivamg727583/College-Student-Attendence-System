@@ -77,7 +77,7 @@ router.post('/create', auth, async (req, res) => {
 // 🟢 DELETE A CLASS
 router.delete('/delete/:id', auth, async (req, res) => {
     const classId = req.params.id;
-
+console.log(classId)
     if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({ success: false, message: 'Invalid Class ID' });
     }
@@ -88,6 +88,7 @@ router.delete('/delete/:id', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Class not found' });
         }
 
+        console.log("deleteclass ",deletedClass)
         // Remove class from teachers and students
         await TeacherModel.updateMany({ classes: classId }, { $pull: { classes: classId } });
         await StudentModel.updateMany({ class: classId }, { $set: { class: null } });

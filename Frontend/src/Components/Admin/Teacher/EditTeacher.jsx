@@ -59,7 +59,7 @@ const EditTeacher = () => {
         headers: { 'Content-Type': 'application/json' },
       });
       console.log("Backend Response:", response);
-      navigate("/admin/manage-teachers");
+      navigate(-1);
     } catch (error) {
       console.error("Error:", error);
     }

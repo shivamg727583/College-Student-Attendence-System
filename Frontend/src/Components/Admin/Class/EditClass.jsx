@@ -4,12 +4,13 @@ import { fetchSubjects } from '../../../redux/adminSlice';
 import { fetchTeachers } from '../../../redux/TeacherSlice';
 import { updateClass } from '../../../redux/Slices/classSlice';
 import { toast } from 'react-toastify';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 function EditClass() {
   const dispatch = useDispatch();
   const { classId } = useParams();
   const { teachers, subjects: availableSubjects, classes } = useSelector((state) => state.admin);
+  const navigate = useNavigate();
   
   const [class_name, setClassName] = useState('');
   const [semester, setSemester] = useState('');
@@ -53,6 +54,7 @@ function EditClass() {
     const formData = { classId, class_name, semester, section, subjects };
     dispatch(updateClass({id:classId , updatedData:formData}));
     toast.success("Class updated successfully");
+    navigate(-1);
   };
 
   return (

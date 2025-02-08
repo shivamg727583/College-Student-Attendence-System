@@ -11,6 +11,8 @@ import TeacherRegistration from './Teacher/TeacherRegister';
 import EditTeacher from './Teacher/EditTeacher';
 import CreateClass from './Class/CreateClass';
 import EditClass from './Class/EditClass';
+import StudentRegister from './Student/StudentRegister';
+import StudentUpdate from './Student/StudentUpdate';
 
 
 function AdminDashboard() {
@@ -38,6 +40,8 @@ function AdminDashboard() {
             <Route path='teacher/edit/:id' element={<EditTeacher />} />
             <Route path='class/register' element={<CreateClass />} />
             <Route path='class/edit/:id' element={<EditClass />} />
+            <Route path='student/register' element={<StudentRegister />} />
+            <Route path='student/edit/:id' element={<StudentUpdate />} />
 
             {/* Add more routes as needed */}
           </Routes>

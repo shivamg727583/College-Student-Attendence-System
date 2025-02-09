@@ -46,6 +46,7 @@ export const registerStudents = createAsyncThunk("students/register", async (for
 // ✅ Update student
 export const updateStudent = createAsyncThunk("students/update", async ({ id, studentData }, { rejectWithValue }) => {
     try {
+        console.log("studentdata : ",studentData)
         const response = await axios.put(`/students/${id}`, studentData);
         toast.success("Student updated successfully!");
         return response.data;

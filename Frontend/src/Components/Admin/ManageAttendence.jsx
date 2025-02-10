@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FaSearch } from "react-icons/fa";
 import Pagination from "../../Components/Others/Pagination";
 import { fetchAttendanceReports } from "../../redux/adminSlice";
+import { Link } from "react-router-dom";
 
 const AttendanceManagement = () => {
   const dispatch = useDispatch();
@@ -104,13 +105,14 @@ const AttendanceManagement = () => {
         {attendanceReports.length > 0 ? (
           <ul>
             {attendanceReports.slice(0, 5).map((record, index) => (
-              <li
+              <Link
+              to={`/admin/attendance/recent/${record._id}`}
                 key={index}
-                className="cursor-pointer p-2 hover:bg-gray-100 border-b"
-                onClick={() => handleRecentClick(record)}
+                className="cursor-pointer w-full flex flex-row p-2 hover:bg-gray-100 border-b"
+                
               >
                 {record.subject.subject_name} -  {record?.class.class_name}  ({record?.class.semester} Sem,  Section {record?.class.section})  | Date: {new Date(record.date).toDateString()  } | Time - {new Date(record.date).toLocaleTimeString()  }  | By - {record?.teacher.name}
-              </li>
+              </Link>
             ))}
           </ul>
         ) : (

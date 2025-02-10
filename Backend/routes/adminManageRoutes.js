@@ -74,4 +74,32 @@ router.post('/attendance-report', auth, async (req, res) => {
     }
 });
 
+router.get("/attendance/:id", auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Validate if ID is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid Attendance ID format!" });
+        }
+
+        // Find the attendance record and populate related references
+        const attendance = await AttendanceModel.findById(id)
+            .populate('student', 'name enrollment_number') // Add fields you want to retrieve
+            .populate('class', 'class_name semester section') 
+            .populate('subject', 'subject_name subject_code')
+            .populate('teacher', 'name email');
+
+        if (!attendance) {
+            return res.status(404).json({ message: "Attendance record not found" });
+        }
+
+        res.status(200).json(attendance);
+    } catch (error) {
+        console.error("Error fetching attendance:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
 module.exports = router;

@@ -68,6 +68,18 @@ export const fetchAttendanceReports = createAsyncThunk(
     }
 );
 
+export const fetchSelectedAttendance = createAsyncThunk(
+    "admin/fetchSelectedAttendance",
+    async (attendanceId, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`admin/attendance/${attendanceId}`); // Fetch by ID
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || "Error fetching attendance record");
+        }
+    }
+);
+
 // ✅ Update Admin
 export const updateAdmin = createAsyncThunk(
     "admin/updateAdmin",
@@ -107,6 +119,7 @@ const adminSlice = createSlice({
         classes: [],
         subjects: [],
         attendanceReports: [],
+        selectedAttendance: null,  // ✅ Added for selected attendance
         loading: false,
         error: null,
     },
@@ -140,6 +153,18 @@ const adminSlice = createSlice({
             })
             .addCase(fetchAttendanceReports.fulfilled, (state, action) => {
                 state.attendanceReports = action.payload;
+            })
+            .addCase(fetchSelectedAttendance.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchSelectedAttendance.fulfilled, (state, action) => {
+                state.loading = false;
+                state.selectedAttendance = action.payload; // ✅ Storing fetched attendance
+            })
+            .addCase(fetchSelectedAttendance.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             })
             .addCase(updateAdmin.fulfilled, (state, action) => {
                 state.admin = action.payload;
